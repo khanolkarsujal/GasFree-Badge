@@ -2,13 +2,12 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './App.css'
-import { UGFProvider } from '@tychilabs/react-ugf'
+// import { UGFProvider } from '@tychilabs/react-ugf' // Uncomment once package is available
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* UGFProvider enables the Universal Gas Framework hooks and components */}
-    <UGFProvider>
+    {/* <UGFProvider> */}
       <App />
-    </UGFProvider>
+    {/* </UGFProvider> */}
   </React.StrictMode>,
 )
