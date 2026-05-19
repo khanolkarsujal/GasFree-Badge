@@ -2,7 +2,7 @@ export function CallToAction({ onConnect, isWalletReady }) {
   return (
     <section className="mt-20 mb-8 w-full">
       <div className="bg-[#12141d] rounded-3xl p-10 sm:p-14 flex flex-col lg:flex-row items-center lg:items-start justify-between gap-12 lg:gap-8">
-        
+
         {/* Left Side */}
         <div className="flex-1 max-w-[500px]">
           <span className="text-[10px] text-indigo-300/80 font-bold tracking-[0.15em] uppercase mb-4 block">
@@ -18,22 +18,22 @@ export function CallToAction({ onConnect, isWalletReady }) {
           </p>
           <div className="flex flex-wrap items-center gap-4">
             {!isWalletReady ? (
-              <button 
+              <button
                 onClick={onConnect}
                 className="bg-white hover:bg-gray-100 text-black px-6 py-2.5 rounded-full font-bold text-[0.95rem] transition-colors"
               >
                 Connect Wallet
               </button>
             ) : (
-              <button 
+              <button
                 className="bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-2.5 rounded-full font-bold text-[0.95rem] transition-colors"
               >
                 Wallet Connected
               </button>
             )}
-            <a 
-              href="https://universalgasframework.com" 
-              target="_blank" 
+            <a
+              href="https://universalgasframework.com"
+              target="_blank"
               rel="noreferrer"
               className="bg-transparent hover:bg-white/5 border border-white/10 text-white px-6 py-2.5 rounded-full font-bold text-[0.95rem] transition-colors inline-block"
             >

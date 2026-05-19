@@ -3,20 +3,20 @@ import { Zap, ArrowLeftRight, ShieldCheck } from 'lucide-react';
 export function Features() {
   return (
     <section className="py-24 max-w-[1000px] mx-auto text-center">
-      
+
       {/* Heading */}
       <h2 className="text-[2.2rem] sm:text-[3rem] tracking-tight leading-[1.1] mb-6 font-medium">
         <span className="text-white">Enterprise-grade infrastructure,</span><br />
         <span className="text-[#64748b]">invisible to the user.</span>
       </h2>
-      
+
       <p className="text-[#8b949e] text-[1.1rem] leading-[1.6] max-w-[650px] mx-auto mb-16 font-light">
         The Universal Gas Framework removes friction from onboarding by abstracting complex Web3 mechanics away from your end users.
       </p>
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-        
+
         {/* Card 1 */}
         <div className="bg-[#0f111a] border border-white/5 rounded-3xl p-8 hover:border-white/10 transition-colors flex flex-col justify-between">
           <div>

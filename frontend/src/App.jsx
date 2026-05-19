@@ -137,22 +137,27 @@ export default function App() {
                 Verifiable on-chain credentials. Gas is completely sponsored.
               </p>
             </div>
-            
+
             {/* Inline progress strip */}
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1.5">
+            <div className="flex items-center">
+              <div className="flex items-center gap-[6px]">
                 {[0, 1, 2].map((i) => {
                   const isClaimed = collection.claimed.length > i;
                   return (
-                    <div
-                      key={i}
-                      className={`w-3.5 h-4 clip-badge transition-colors duration-500 ${isClaimed ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]' : 'bg-[#0e1520] border border-white/10'}`}
-                      style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}
-                    />
+                    <svg key={i} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {isClaimed ? (
+                        <>
+                          <circle cx="8" cy="8" r="7.5" fill="#6366f1" stroke="#6366f1" />
+                          <path d="M5 8L7 10L11 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </>
+                      ) : (
+                        <circle cx="8" cy="8" r="7.5" stroke="#334155" strokeWidth="1" fill="transparent" />
+                      )}
+                    </svg>
                   );
                 })}
               </div>
-              <span className="text-[11px] text-gray-500 font-medium">
+              <span className="text-[12px] text-gray-500 ml-[8px]">
                 {collection.claimed.length} of {BADGES.length} badges collected
               </span>
             </div>
@@ -226,9 +231,9 @@ export default function App() {
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.5 }}
         >
-          <CallToAction 
-            onConnect={wallet.connect} 
-            isWalletReady={isWalletReady} 
+          <CallToAction
+            onConnect={wallet.connect}
+            isWalletReady={isWalletReady}
           />
         </motion.div>
       </motion.main>

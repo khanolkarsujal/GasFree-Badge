@@ -32,7 +32,7 @@ export function BadgeCard({ badge, isClaimed, disabled, onClaim, labelOverride, 
         </div>
       );
     }
-    
+
     if (!isWalletReady) {
       return (
         <button
@@ -64,11 +64,11 @@ export function BadgeCard({ badge, isClaimed, disabled, onClaim, labelOverride, 
     return (
       <article
         className={[
-          'group relative flex flex-col sm:flex-row items-center gap-0 rounded-[14px] border overflow-hidden min-h-[160px]',
+          'group relative flex flex-row items-stretch rounded-xl border overflow-hidden min-h-[220px] md:col-span-2',
           'transition-[border-color,transform,box-shadow] duration-300',
           isClaimed
             ? 'bg-[#0a1a0f] border-[#10b981]/[0.2]'
-            : 'bg-[#0a0a0a] border-amber-500/20 hover:border-amber-500/40 hover:-translate-y-px hover:shadow-[0_8px_30px_rgba(245,158,11,0.15)]',
+            : 'bg-[#12141c] border-white/5 hover:border-white/10 hover:-translate-y-px hover:shadow-[0_0_20px_rgba(245,158,11,0.1)]',
         ].join(' ')}
         aria-label={`${badge.name} Badge${isClaimed ? ' — collected' : ''}`}
       >
@@ -78,36 +78,36 @@ export function BadgeCard({ badge, isClaimed, disabled, onClaim, labelOverride, 
         )}
 
         {/* Distinct Illustration Left Side */}
-        <div className="relative w-full sm:w-[220px] h-[140px] sm:h-auto sm:self-stretch flex items-center justify-center bg-gradient-to-br from-[#050505] to-[#111111] border-b sm:border-b-0 sm:border-r border-white/5 p-6 overflow-hidden shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-rose-500/10 animate-pulse" style={{ animationDuration: '4s' }} />
-          <div className="relative w-[84px] h-[84px] rounded-full flex items-center justify-center text-[2.5rem] bg-[#0a0a0a] border border-amber-500/30 shadow-[0_0_25px_rgba(245,158,11,0.2)] z-10 group-hover:scale-110 transition-transform duration-500">
-            {badge.icon}
+        <div className="w-[200px] shrink-0 flex items-center justify-center bg-[#150a05] rounded-l-xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent animate-pulse" style={{ animationDuration: '4s' }} />
+          <div className="w-[112px] h-[112px] rounded-full bg-white/[0.07] flex items-center justify-center z-10 group-hover:scale-110 transition-transform duration-500">
+            <div className="w-[80px] h-[80px] flex items-center justify-center text-[4rem]">
+              {badge.icon}
+            </div>
           </div>
         </div>
 
         {/* Content Right Side */}
-        <div className="flex-1 flex flex-col sm:flex-row items-center gap-6 w-full p-6 sm:px-8 sm:py-8 z-10">
-          <div className="flex-1 text-center sm:text-left min-w-0">
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
-              <h3 className="text-[1.2rem] font-bold tracking-tight text-[#f1f5f9]">
-                {badge.name} Badge
-              </h3>
-              <span
-                className="flex-shrink-0 text-[9px] font-black uppercase tracking-[0.1em] px-1.5 py-0.5 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.3)]"
-                style={{
-                  background: `linear-gradient(135deg, ${badge.colors[0]}, ${badge.colors[1]})`,
-                  color: '#fff',
-                }}
-              >
-                {badge.rarity}
-              </span>
-            </div>
-            <p className="text-[13px] text-gray-400 leading-relaxed max-w-lg">
-              {badge.desc}
-            </p>
+        <div className="flex-1 min-w-0 px-[28px] py-[24px] flex flex-col justify-center gap-[10px] z-10">
+          <div>
+            <span
+              className="inline-block text-[10px] font-black uppercase tracking-[0.1em] px-2 py-0.5 rounded shadow-[0_0_10px_rgba(245,158,11,0.2)] mb-1"
+              style={{
+                background: `linear-gradient(135deg, ${badge.colors[0]}, ${badge.colors[1]})`,
+                color: '#fff',
+              }}
+            >
+              {badge.rarity}
+            </span>
           </div>
+          <h3 className="text-2xl font-bold tracking-tight text-white">
+            {badge.name} Badge
+          </h3>
+          <p className="text-[14px] text-gray-400 leading-relaxed mb-2">
+            {badge.desc}
+          </p>
 
-          <div className="flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto">
+          <div className="w-fit mt-1">
             {renderCTA()}
           </div>
         </div>
