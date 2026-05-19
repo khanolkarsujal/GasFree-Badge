@@ -31,7 +31,7 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            className="absolute inset-0 bg-black/85 backdrop-blur-md"
             onClick={!isBusy ? onClose : undefined}
             aria-hidden
           />
@@ -42,11 +42,11 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-            className="relative z-10 w-full max-w-[640px] flex flex-col sm:flex-row overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_80px_-20px_rgba(120,80,220,0.35)]"
+            className="relative z-10 w-full max-w-[640px] flex flex-col sm:flex-row overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_80px_-20px_rgba(120,80,220,0.45)]"
           >
             {/* ── Left: Summary panel ── */}
             <div
-              className="sm:w-[240px] flex-shrink-0 flex flex-col gap-6 p-6 sm:p-8 relative overflow-hidden border-r border-white/5"
+              className="sm:w-[240px] flex-shrink-0 flex flex-col gap-6 p-6 sm:p-8 relative overflow-hidden border-b sm:border-b-0 sm:border-r border-white/5"
               style={{ background: "var(--gradient-card)" }}
             >
               <div className="absolute top-0 right-0 p-8 opacity-20" style={{ color: badge.colors[0] }}>
@@ -75,6 +75,32 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
                 <p className="text-xs text-muted-foreground mt-1">ERC-721 · Base Sepolia</p>
               </div>
 
+              {/* Dynamic Step Processing Detail Banner */}
+              {isBusy && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-2xl border border-[oklch(0.75_0.18_295/0.2)] bg-[oklch(0.75_0.18_295/0.05)] p-3.5 relative overflow-hidden z-10"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-[oklch(0.75_0.18_295/0.05)] to-transparent animate-pulse" />
+                  <div className="flex items-center gap-2 relative z-10">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[oklch(0.75_0.18_295)] opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[oklch(0.75_0.18_295)]"></span>
+                    </span>
+                    <span className="text-[9px] uppercase font-bold tracking-widest text-[oklch(0.75_0.18_295)]">
+                      Processing
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-white/90 mt-2 font-medium leading-relaxed min-h-[36px]">
+                    {activeStep === 1 && "Verifying identity & signature via JWT..."}
+                    {activeStep === 2 && "Pricing action & quoting Mock USD..."}
+                    {activeStep === 3 && "Sponsoring transaction with Zero ETH..."}
+                    {activeStep === 4 && "Broadcasting claim event to Base Sepolia..."}
+                  </p>
+                </motion.div>
+              )}
+
               {/* Stripe-style cost breakdown */}
               <div className="flex flex-col gap-3 mt-auto pt-5 border-t border-white/10 relative z-10">
                 <div className="flex justify-between items-center text-xs font-semibold">
@@ -99,7 +125,7 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
               {!isBusy && (
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 p-1.5 text-muted-foreground hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full border border-white/10"
+                  className="absolute top-4 right-4 p-1.5 text-muted-foreground hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full border border-white/10 z-20"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -117,7 +143,7 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
                   </div>
                   <div>
                     <h3 className="font-heading text-2xl font-bold text-white">Badge Claimed!</h3>
-                    <p className="text-sm text-muted-foreground mt-1">It is now permanently on-chain.</p>
+                    <p className="text-sm text-muted-foreground mt-1 font-medium">It is now permanently on-chain.</p>
                   </div>
                   <a
                     href={basescanTx(txHash)}
@@ -187,39 +213,55 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
                       const active = activeStep === s.id;
                       const pending = activeStep < s.id;
                       return (
-                        <li
+                        <motion.li
+                          layout
                           key={s.id}
                           className={[
                             "flex items-center gap-4 px-4 py-3.5 rounded-2xl border transition-all duration-300 relative overflow-hidden",
                             done ? "bg-emerald-950/10 border-emerald-500/20" : "",
                             active
-                              ? "border-[oklch(0.75_0.18_295/0.3)] bg-[oklch(0.75_0.18_295/0.05)] shadow-[0_0_24px_-4px_oklch(0.75_0.18_295/0.3)] animate-pulse"
+                              ? "border-[oklch(0.75_0.18_295/0.3)] bg-[oklch(0.75_0.18_295/0.05)] shadow-[0_0_30px_-5px_oklch(0.75_0.18_295/0.25)]"
                               : "",
                             pending ? "bg-white/[0.01] border-white/5 opacity-55" : "",
                           ].join(" ")}
                         >
                           {active && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-[oklch(0.75_0.18_295/0.05)] to-transparent" />
+                            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[oklch(0.75_0.18_295)] to-[oklch(0.5_0.22_290)]" />
                           )}
 
                           {/* Step indicator */}
-                          <div
-                            className={[
-                              "w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold relative z-10 transition-colors duration-300",
-                              done
-                                ? "bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]"
-                                : "",
-                              active
-                                ? "bg-gradient-to-br from-[oklch(0.7_0.2_295)] to-[oklch(0.5_0.22_290)] text-white shadow-[0_0_15px_oklch(0.7_0.2_295/0.4)]"
-                                : "",
-                              pending ? "bg-white/5 border border-white/10 text-muted-foreground" : "",
-                            ].join(" ")}
-                          >
-                            {done && <CheckCircle2 className="w-5 h-5" />}
-                            {active && (
-                              <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center relative">
+                            {done && (
+                              <motion.div
+                                initial={{ scale: 0.4, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                              >
+                                <CheckCircle2 className="w-5 h-5" />
+                              </motion.div>
                             )}
-                            {pending && s.id}
+
+                            {active && (
+                              <>
+                                {/* Radar pulse rings */}
+                                <span className="absolute inset-0 rounded-full bg-[oklch(0.75_0.18_295)] opacity-40 animate-radar" />
+                                <span
+                                  className="absolute inset-0.5 rounded-full bg-[oklch(0.75_0.18_295)] opacity-20 animate-radar"
+                                  style={{ animationDelay: "0.6s" }}
+                                />
+                                {/* Center spinning indicator */}
+                                <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-[oklch(0.7_0.2_295)] to-[oklch(0.5_0.22_290)] text-white shadow-[0_0_15px_oklch(0.7_0.2_295/0.4)] flex items-center justify-center">
+                                  <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                </div>
+                              </>
+                            )}
+
+                            {pending && (
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-muted-foreground font-bold text-xs">
+                                {s.id}
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex-1 min-w-0 relative z-10">
@@ -235,14 +277,14 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
                                 done
                                   ? "text-emerald-500/70"
                                   : active
-                                  ? "text-[oklch(0.75_0.18_295/0.8)]"
+                                  ? "text-[oklch(0.75_0.18_295/0.85)] font-semibold"
                                   : "text-muted-foreground/60"
                               }`}
                             >
                               {s.sub}
                             </p>
                           </div>
-                        </li>
+                        </motion.li>
                       );
                     })}
                   </ol>
