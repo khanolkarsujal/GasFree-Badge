@@ -62,25 +62,67 @@ export function useWallet() {
   }, [hasProvider]);
 
   const switchToBaseSepolia = useCallback(async () => {
-    if (!hasProvider) return;
+    if (!hasProvider) return false;
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: BASE_SEPOLIA_CHAIN_HEX }],
       });
+      // Force update the chain ID state immediately after successful switch
+      const hex = await window.ethereum.request({ method: 'eth_chainId' });
+      setChainId(parseInt(hex, 16));
+      return true;
     } catch (e) {
-      if (e.code === 4902) {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId:         BASE_SEPOLIA_CHAIN_HEX,
-            chainName:       'Base Sepolia Testnet',
-            nativeCurrency:  { name: 'ETH', symbol: 'ETH', decimals: 18 },
-            rpcUrls:         ['https://sepolia.base.org'],
-            blockExplorerUrls: ['https://sepolia.basescan.org'],
-          }],
-        });
+      // 4902 indicates the chain has not been added to MetaMask
+      if (e.code === 4902 || e?.message?.includes("Unrecognized chain ID")) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId:         BASE_SEPOLIA_CHAIN_HEX,
+              chainName:       'Base Sepolia Testnet',
+              nativeCurrency:  { name: 'Ether', symbol: 'ETH', decimals: 18 },
+              rpcUrls:         [
+                'https://sepolia.base.org',
+                'https://base-sepolia-rpc.publicnode.com',
+                'https://sepolia.gateway.tenderly.co'
+              ],
+              blockExplorerUrls: ['https://sepolia.basescan.org'],
+            }],
+          });
+          const hex = await window.ethereum.request({ method: 'eth_chainId' });
+          setChainId(parseInt(hex, 16));
+          return true;
+        } catch (addError) {
+          console.error("Failed to add Base Sepolia:", addError);
+          return false;
+        }
       }
+      console.error("Failed to switch to Base Sepolia:", e);
+      return false;
+    }
+  }, [hasProvider]);
+
+  const addTYIToken = useCallback(async () => {
+    if (!hasProvider) return false;
+    try {
+      const TYI_ADDRESS = '0x9b9deeea99C2B77c0e7F7bdCf0a01a0F0843e5DD';
+      const success = await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20',
+          options: {
+            address: TYI_ADDRESS,
+            symbol: 'TYI',
+            decimals: 18,
+            image: 'https://raw.githubusercontent.com/tychilabs/ugf-assets/main/tyi-token-logo.png',
+          },
+        },
+      });
+      return !!success;
+    } catch (e) {
+      console.error("Failed to register TYI watchAsset:", e);
+      return false;
     }
   }, [hasProvider]);
 
@@ -94,5 +136,6 @@ export function useWallet() {
     error,
     connect,
     switchToBaseSepolia,
+    addTYIToken,
   };
 }

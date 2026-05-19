@@ -132,3 +132,66 @@ export async function executeGaslessClaim(signer, onStep = () => {}) {
 function _msg(err) {
   return err instanceof UGFError ? err.message : (err?.message ?? String(err));
 }
+
+/**
+ * Execute a generic gasless ERC-20 token transfer on-chain via UGF.
+ * Used for custom Token Sends, Donations, and Checkouts.
+ */
+export async function executeGaslessTokenTransfer(signer, recipient, amountDecimals, onStep = () => {}) {
+  const client       = new UGFClient();
+  const payerAddress = await signer.getAddress();
+
+  // ── 1. Authenticate ──────────────────────────────────────────────────────────
+  onStep(1);
+  try {
+    await client.auth.login(signer);
+  } catch (err) {
+    throw new Error(`Authentication failed: ${_msg(err)}`);
+  }
+
+  // ── 2. Quote — encode transfer(recipient, amount) on TYI ERC-20 token ────────
+  onStep(2);
+  const tyiInterface = new ethers.Interface([
+    'function transfer(address to, uint256 value) external returns (bool)'
+  ]);
+  const parsedAmount = ethers.parseUnits(amountDecimals.toString(), 18);
+  const data = tyiInterface.encodeFunctionData('transfer', [recipient.toLowerCase(), parsedAmount]);
+  
+  let quote;
+  try {
+    quote = await client.quote.get({
+      payer_address: payerAddress.toLowerCase(),
+      tx_object: JSON.stringify({
+        from:  payerAddress.toLowerCase(),
+        to:    TYI_ADDRESS.toLowerCase(),
+        data,
+        value: '0x0',
+      }),
+    });
+  } catch (err) {
+    throw new Error(`Quote failed: ${_msg(err)}`);
+  }
+
+  // ── 3. Settle — ERC-3009 signature ──────────────────────────────────────────
+  onStep(3);
+  try {
+    await client.payment.x402.execute({ quote, signer });
+  } catch (err) {
+    const msg = _msg(err);
+    if (/400|insufficient|balance|HTTP 4/i.test(msg)) throw new Error('NO_MOCK_USD');
+    throw new Error(`Payment failed: ${msg}`);
+  }
+
+  // ── 4. Execute ───────────────────────────────────────────────────────────────
+  onStep(4);
+  try {
+    const { userTxHash } = await client.chains.evm.sponsorAndExecute(
+      quote.digest,
+      signer,
+      async () => ({ to: TYI_ADDRESS.toLowerCase(), data, value: 0n })
+    );
+    return userTxHash;
+  } catch (err) {
+    throw new Error(`Execution failed: ${_msg(err)}`);
+  }
+}

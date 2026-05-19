@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "ERC-721 NFT with public mint, whitelist, reveal & royalties — deployable on Base Sepolia",
   "scripts": {
+    "dev":              "npm run dev --prefix frontend",
+    "build":            "npm run build --prefix frontend",
     "compile":          "npx hardhat compile",
     "test":             "npx hardhat test",
     "test:gas":         "REPORT_GAS=true npx hardhat test",
