@@ -42,7 +42,7 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-            className="relative z-10 w-full max-w-[640px] flex flex-col sm:flex-row overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_80px_-20px_rgba(120,80,220,0.45)]"
+            className="relative z-10 w-full max-w-[640px] max-h-[90vh] sm:max-h-none flex flex-col sm:flex-row overflow-y-auto sm:overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_80px_-20px_rgba(120,80,220,0.45)] scrollbar-thin scrollbar-thumb-white/10"
           >
             {/* ── Left: Summary panel ── */}
             <div

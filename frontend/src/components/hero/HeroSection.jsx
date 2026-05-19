@@ -2,14 +2,17 @@ import { useState } from 'react';
 import { CONTRACT_ADDRESS } from '../../contractConfig';
 import { Copy, ExternalLink, ShieldCheck, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { copyToClipboard } from '../../lib/utils';
 
 export function HeroSection({ stats, onConnect }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(CONTRACT_ADDRESS);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    const success = await copyToClipboard(CONTRACT_ADDRESS);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (

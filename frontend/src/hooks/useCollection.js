@@ -12,20 +12,33 @@ export function useCollection(account) {
   const [claimed,    setClaimed]    = useState([]);
 
   const refresh = useCallback(async (overrideAccount) => {
-    if (!window.ethereum) return;
+    let provider;
+    try {
+      if (typeof window !== 'undefined' && window.ethereum) {
+        provider = new ethers.BrowserProvider(window.ethereum);
+      } else {
+        provider = new ethers.JsonRpcProvider('https://sepolia.base.org');
+      }
+    } catch (e) {
+      console.error("Failed to create provider:", e);
+      return;
+    }
 
     const addr     = overrideAccount ?? account;
-    const provider = new ethers.BrowserProvider(window.ethereum);
 
-    const [s, tyi, cl] = await Promise.all([
-      getCollectionStats(provider),
-      addr ? getTYIBalance(provider, addr)    : Promise.resolve(null),
-      addr ? getClaimedBadges(provider, addr) : Promise.resolve([]),
-    ]);
+    try {
+      const [s, tyi, cl] = await Promise.all([
+        getCollectionStats(provider),
+        addr ? getTYIBalance(provider, addr)    : Promise.resolve(null),
+        addr ? getClaimedBadges(provider, addr) : Promise.resolve([]),
+      ]);
 
-    setStats(s);
-    setTYIBalance(tyi);
-    setClaimed(cl);
+      setStats(s);
+      setTYIBalance(tyi);
+      setClaimed(cl);
+    } catch (err) {
+      console.error("Error refreshing collection data:", err);
+    }
   }, [account]);
 
   return {

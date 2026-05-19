@@ -36,7 +36,7 @@ import { executeGaslessClaim, executeGaslessTokenTransfer } from "@/services/ugf
 import { BADGES } from "@/lib/constants";
 import { CONTRACT_ADDRESS } from "@/contractConfig";
 import { ClaimModal } from "@/components";
-import { basescanAddress } from "@/lib/utils";
+import { basescanAddress, copyToClipboard } from "@/lib/utils";
 
 const isDeployed = CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000";
 
@@ -84,11 +84,13 @@ function Nav({ wallet }) {
 function Hero({ stats, wallet, onConnect }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = (e) => {
+  const handleCopy = async (e) => {
     e.preventDefault();
-    navigator.clipboard.writeText(CONTRACT_ADDRESS);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const success = await copyToClipboard(CONTRACT_ADDRESS);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (

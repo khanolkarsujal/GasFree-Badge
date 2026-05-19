@@ -42,12 +42,18 @@ export function WalletStateBanners({ wallet, collection }) {
               </h3>
               <p className="text-[0.85rem] text-slate-400 leading-relaxed mt-1">
                 {wallet.error === 'no_provider' ? (
-                  <>
-                    MetaMask was not detected. You'll need it to interact with the blockchain &mdash;{' '}
-                    <a href="https://metamask.io" target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium hover:underline underline-offset-4">
-                      install it here
-                    </a>.
-                  </>
+                  wallet.isMobile ? (
+                    <>
+                      MetaMask was not detected. Tap the button below to open this app inside MetaMask's browser.
+                    </>
+                  ) : (
+                    <>
+                      MetaMask was not detected. You'll need it to interact with the blockchain &mdash;{' '}
+                      <a href="https://metamask.io" target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium hover:underline underline-offset-4">
+                        install it here
+                      </a>.
+                    </>
+                  )
                 ) : (
                   'Connect your wallet to claim a badge. Gas fees are sponsored, so no ETH is required.'
                 )}
@@ -65,7 +71,14 @@ export function WalletStateBanners({ wallet, collection }) {
               whileHover={!wallet.loading ? { scale: 1.03 } : {}}
               whileTap={!wallet.loading ? { scale: 0.97 } : {}}
               type="button"
-              onClick={wallet.error === 'no_provider' ? () => window.open('https://metamask.io', '_blank') : wallet.connect}
+              onClick={wallet.error === 'no_provider'
+                ? (wallet.isMobile
+                    ? () => {
+                        const dappUrl = window.location.href.replace(/^https?:\/\//, '');
+                        window.open(`https://metamask.app.link/dapp/${dappUrl}`, '_blank');
+                      }
+                    : () => window.open('https://metamask.io', '_blank'))
+                : wallet.connect}
               disabled={wallet.loading}
               className={`relative px-5 py-2.5 rounded-xl text-[0.85rem] font-bold transition-all duration-300 overflow-hidden flex items-center gap-2 ${wallet.error === 'no_provider'
                   ? 'bg-slate-800 text-slate-300 hover:text-white border border-white/10 hover:border-white/20'
@@ -73,7 +86,7 @@ export function WalletStateBanners({ wallet, collection }) {
                 } disabled:opacity-60 disabled:cursor-not-allowed`}
             >
               {wallet.error === 'no_provider'
-                ? 'Install MetaMask'
+                ? (wallet.isMobile ? 'Open in MetaMask' : 'Install MetaMask')
                 : wallet.loading
                   ? 'Connecting...'
                   : <>Connect Wallet <ChevronRight className="w-4 h-4 opacity-70" /></>}

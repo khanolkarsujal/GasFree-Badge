@@ -10,10 +10,19 @@ export function useWallet() {
   const [chainId,  setChainId]  = useState(null);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
+  const [isMobile, setIsMobile] = useState(false);
 
   const isConnected  = !!account;
   const isRightChain = chainId === BASE_SEPOLIA_CHAIN_ID;
   const hasProvider  = typeof window !== 'undefined' && !!window.ethereum;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                     (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+      setIsMobile(mobile);
+    }
+  }, []);
 
   // ── Listeners ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -43,6 +52,11 @@ export function useWallet() {
   // ── Actions ──────────────────────────────────────────────────────────────────
   const connect = useCallback(async () => {
     if (!hasProvider) {
+      if (isMobile) {
+        const dappUrl = window.location.href.replace(/^https?:\/\//, '');
+        window.open(`https://metamask.app.link/dapp/${dappUrl}`, '_blank');
+        return;
+      }
       setError('no_provider');
       return;
     }
@@ -59,7 +73,7 @@ export function useWallet() {
     } finally {
       setLoading(false);
     }
-  }, [hasProvider]);
+  }, [hasProvider, isMobile]);
 
   const switchToBaseSepolia = useCallback(async () => {
     if (!hasProvider) return false;
@@ -137,5 +151,6 @@ export function useWallet() {
     connect,
     switchToBaseSepolia,
     addTYIToken,
+    isMobile,
   };
 }
