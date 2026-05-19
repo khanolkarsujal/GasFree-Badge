@@ -75,7 +75,7 @@ export function useWallet() {
         const url = new URL(window.location.href);
         url.searchParams.set('connect', 'true');
         const dappUrl = url.toString().replace(/^https?:\/\//, '');
-        window.open(`https://metamask.app.link/dapp/${dappUrl}`, '_blank');
+        window.location.href = `https://metamask.app.link/dapp/${dappUrl}`;
         return;
       }
       setError('no_provider');

@@ -69,12 +69,24 @@ function Nav({ wallet }) {
           </a>
         </nav>
         <button
-          onClick={wallet.account ? undefined : wallet.connect}
-          className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition-all hover:bg-white/90 hover:shadow-[0_0_24px_-4px_rgba(255,255,255,0.4)]"
+          onClick={
+            !wallet.account
+              ? wallet.connect
+              : !wallet.isRightChain
+              ? wallet.switchToBaseSepolia
+              : undefined
+          }
+          className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all hover:shadow-[0_0_24px_-4px_rgba(255,255,255,0.4)] ${
+            wallet.account && !wallet.isRightChain
+              ? "bg-amber-500 hover:bg-amber-400 text-black cursor-pointer font-bold"
+              : "bg-white hover:bg-white/90 text-black"
+          }`}
         >
-          {wallet.account
-            ? `${wallet.account.slice(0, 6)}...${wallet.account.slice(-4)}`
-            : "Connect Wallet"}
+          {!wallet.account
+            ? "Connect Wallet"
+            : !wallet.isRightChain
+            ? "Switch Network"
+            : `${wallet.account.slice(0, 6)}...${wallet.account.slice(-4)}`}
         </button>
       </div>
     </header>
@@ -121,12 +133,24 @@ function Hero({ stats, wallet, onConnect }) {
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <button
-              onClick={wallet.account ? undefined : onConnect}
-              className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-white/90"
+              onClick={
+                !wallet.account
+                  ? onConnect
+                  : !wallet.isRightChain
+                  ? wallet.switchToBaseSepolia
+                  : undefined
+              }
+              className={`rounded-full px-6 py-3 text-sm font-semibold transition-all ${
+                wallet.account && !wallet.isRightChain
+                  ? "bg-amber-500 hover:bg-amber-400 text-black cursor-pointer font-bold"
+                  : "bg-white hover:bg-white/90 text-black"
+              }`}
             >
-              {wallet.account
-                ? `${wallet.account.slice(0, 6)}...${wallet.account.slice(-4)}`
-                : "Connect Wallet"}
+              {!wallet.account
+                ? "Connect Wallet"
+                : !wallet.isRightChain
+                ? "Switch to Base Sepolia"
+                : `${wallet.account.slice(0, 6)}...${wallet.account.slice(-4)}`}
             </button>
             {wallet.account && (
               <button
@@ -955,14 +979,30 @@ function UGFPlaygroundsSection({
 
                       <button
                         disabled={isClaimed || isClaiming || !isDeployed}
-                        onClick={isWalletReady ? () => onClaim(badge) : wallet.connect}
+                        onClick={
+                          isClaimed
+                            ? undefined
+                            : !wallet.account
+                            ? wallet.connect
+                            : !wallet.isRightChain
+                            ? wallet.switchToBaseSepolia
+                            : () => onClaim(badge)
+                        }
                         className={`mt-6 w-full rounded-xl py-2.5 text-xs font-semibold transition-all duration-200 ${
                           isClaimed
                             ? "bg-emerald-950/20 border border-emerald-500/20 text-emerald-400 cursor-default"
+                            : wallet.account && !wallet.isRightChain
+                            ? "bg-amber-500 text-black hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] cursor-pointer"
                             : "bg-white text-black hover:bg-white/90 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer"
                         }`}
                       >
-                        {isClaimed ? "Collected" : isWalletReady ? "Claim Badge" : "Connect to Claim"}
+                        {isClaimed
+                          ? "Collected"
+                          : !wallet.account
+                          ? "Connect to Claim"
+                          : !wallet.isRightChain
+                          ? "Switch to Base Sepolia"
+                          : "Claim Badge"}
                       </button>
                     </div>
                   );
@@ -1338,10 +1378,24 @@ function CTA({ wallet, onConnect }) {
           </div>
           <div className="flex flex-col gap-3">
             <button
-              onClick={wallet.account ? undefined : onConnect}
-              className="rounded-full bg-white px-8 py-3 text-sm font-semibold text-black transition-all hover:bg-white/90 hover:shadow-[0_0_24px_-4px_rgba(255,255,255,0.4)]"
+              onClick={
+                !wallet.account
+                  ? onConnect
+                  : !wallet.isRightChain
+                  ? wallet.switchToBaseSepolia
+                  : undefined
+              }
+              className={`rounded-full px-8 py-3 text-sm font-semibold transition-all hover:shadow-[0_0_24px_-4px_rgba(255,255,255,0.4)] ${
+                wallet.account && !wallet.isRightChain
+                  ? "bg-amber-500 hover:bg-amber-400 text-black cursor-pointer font-bold"
+                  : "bg-white hover:bg-white/90 text-black"
+              }`}
             >
-              {wallet.account ? "Connected" : "Connect Wallet"}
+              {!wallet.account
+                ? "Connect Wallet"
+                : !wallet.isRightChain
+                ? "Switch to Base Sepolia"
+                : "Connected"}
             </button>
             <a
               href="#catalog"
