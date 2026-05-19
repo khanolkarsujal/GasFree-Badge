@@ -1,8 +1,23 @@
+# Dependencies
 node_modules/
 frontend/node_modules/
+
+# Build outputs
 dist/
 frontend/dist/
+
+# Hardhat
+artifacts/
+cache/
+typechain/
+typechain-types/
+deployments/
+
+# Environment secrets — NEVER commit these
 .env
 .env.local
+
+# OS / editor noise
 .DS_Store
 *.log
+*.zip

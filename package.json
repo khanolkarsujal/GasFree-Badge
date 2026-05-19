@@ -1,0 +1,26 @@
+{
+  "name": "gasfreebadge-nft",
+  "version": "1.0.0",
+  "description": "ERC-721 NFT with public mint, whitelist, reveal & royalties — deployable on Base Sepolia",
+  "scripts": {
+    "compile":          "npx hardhat compile",
+    "test":             "npx hardhat test",
+    "test:gas":         "REPORT_GAS=true npx hardhat test",
+    "coverage":         "npx hardhat coverage",
+    "node":             "npx hardhat node",
+    "deploy:local":     "npx hardhat run scripts/deploy.js --network localhost",
+    "deploy:testnet":   "npx hardhat run scripts/deploy.js --network baseSepolia",
+    "interact:local":   "npx hardhat run scripts/interact.js --network localhost",
+    "interact:testnet": "npx hardhat run scripts/interact.js --network baseSepolia",
+    "verify":           "npx hardhat verify --network baseSepolia",
+    "clean":            "npx hardhat clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.0",
+    "dotenv": "^16.4.5"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}
