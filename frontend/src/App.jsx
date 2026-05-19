@@ -81,7 +81,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#05070c] text-slate-100 dot-grid relative selection:bg-indigo-500/30 selection:text-indigo-100 overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-[#05070c] text-slate-100 relative selection:bg-indigo-500/30 selection:text-indigo-100 overflow-x-hidden">
       {/* Ambient focal glows */}
       <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] max-w-[1000px] max-h-[1000px] rounded-full"
@@ -103,17 +103,7 @@ export default function App() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="flex-1 relative z-10 w-full max-w-[1000px] mx-auto px-6 pt-12 pb-24"
       >
-        <HeroSection stats={collection.stats} />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.5 }}
-          className="mt-8 mb-16"
-        >
-          <Features />
-        </motion.div>
+        <HeroSection stats={collection.stats} onConnect={wallet.connect} />
 
         <AnimatePresence>
           <WalletStateBanners wallet={wallet} collection={collection} />
@@ -130,10 +120,10 @@ export default function App() {
         >
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>
-              <h2 id="catalog-heading" className="text-sm font-medium tracking-widest uppercase text-gray-400">
+              <h2 id="catalog-heading" className="text-[1.5rem] sm:text-[2rem] font-sans font-bold tracking-tight text-white mb-1">
                 Available Badges
               </h2>
-              <p className="text-[13px] text-gray-400 mt-1.5 leading-relaxed">
+              <p className="text-[1rem] text-[#94a3b8] leading-relaxed">
                 Verifiable on-chain credentials. Gas is completely sponsored.
               </p>
             </div>
@@ -223,6 +213,16 @@ export default function App() {
           className="mt-24"
         >
           <HowItWorks />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5 }}
+          className="mt-24"
+        >
+          <Features />
         </motion.div>
 
         <motion.div

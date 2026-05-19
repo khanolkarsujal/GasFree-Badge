@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 
 export function Header({ account, isRightChain, onConnect }) {
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between px-6 sm:px-10 h-[80px] bg-[#05070c]/90 backdrop-blur-md border-b border-white/5">
+    <header className="sticky top-0 z-50 flex items-center justify-between px-6 sm:px-10 h-[80px] bg-[#050505]/40 backdrop-blur-2xl border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
       
       {/* Left — Logo */}
       <div className="flex items-center gap-3">
@@ -33,9 +33,8 @@ export function Header({ account, isRightChain, onConnect }) {
         {(!account || !isRightChain) ? (
           <button 
             onClick={onConnect}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-transparent border border-white/15 hover:bg-white/5 text-white text-[13px] font-medium transition-colors"
+            className="flex items-center gap-2 px-5 py-2 rounded-full bg-white hover:bg-gray-200 text-black text-[13px] font-bold transition-colors shadow-sm"
           >
-            <Globe className="w-4 h-4 text-[#8b949e]" />
             Connect Wallet
           </button>
         ) : (

@@ -5,7 +5,7 @@ import { ExternalLink, Award } from 'lucide-react';
 export function MyCollection({ claimed }) {
   if (claimed.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-6 rounded-2xl bg-[#0b1120] border border-dashed border-white/10"
+      <div className="flex flex-col items-center justify-center py-12 px-6 rounded-2xl bg-[#0b0c10] border border-dashed border-white/10"
         aria-label="No badges claimed yet">
         <Award className="w-8 h-8 text-slate-600 mb-3" />
         <p className="text-sm font-medium text-slate-400">No badges claimed yet</p>
@@ -31,7 +31,7 @@ export function MyCollection({ claimed }) {
       variants={container}
       initial="hidden"
       animate="show"
-      className="flex flex-col list-none rounded-2xl border border-white/5 overflow-hidden bg-[#0b1120]"
+      className="flex flex-col list-none rounded-2xl border border-white/10 overflow-hidden bg-[#0b0c10]/50 backdrop-blur-xl shadow-xl"
       aria-label="Your claimed badges"
     >
       {claimed.map((badgeItem, i) => (

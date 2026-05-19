@@ -3,7 +3,7 @@ import { CONTRACT_ADDRESS } from '../../contractConfig';
 import { Copy, ExternalLink, ShieldCheck, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function HeroSection({ stats }) {
+export function HeroSection({ stats, onConnect }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -26,10 +26,9 @@ export function HeroSection({ stats }) {
           </div>
 
           {/* Headline */}
-          <h1 className="text-[3.25rem] sm:text-[4rem] font-serif leading-[1.05] tracking-tight text-white mb-6">
-            On-chain<br />
-            credentials<br />
-            without gas friction
+          <h1 className="text-[3.75rem] sm:text-[4.5rem] font-sans font-extrabold leading-[1.05] tracking-tight text-white mb-6">
+            On-chain credentials.
+            <span className="block text-[#a855f7]">Without gas friction.</span>
           </h1>
 
           {/* Description */}
@@ -37,9 +36,8 @@ export function HeroSection({ stats }) {
             Claim verifiable NFT badges on Base Sepolia without asking professionals to hold ETH. GasFreeBadge sponsors claims, verifies wallets, and gives teams a cleaner credential workflow.
           </p>
 
-          {/* Buttons */}
           <div className="flex flex-wrap items-center gap-4 mb-10">
-            <button className="bg-[#a855f7] hover:bg-[#9333ea] text-white px-6 py-2.5 rounded-full font-medium text-[0.95rem] transition-colors shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+            <button onClick={onConnect} className="bg-white hover:bg-gray-200 text-black px-6 py-2.5 rounded-xl font-bold text-[0.95rem] transition-colors">
               Connect Wallet
             </button>
           </div>
@@ -66,7 +64,7 @@ export function HeroSection({ stats }) {
           </div>
 
           {/* Stats Box */}
-          <div className="bg-[#0f111a] border border-white/5 rounded-3xl p-6 mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:divide-x divide-white/5 shadow-xl">
+          <div className="bg-[#0b0c10]/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:divide-x divide-white/5 shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
             {/* Gas Cost */}
             <div className="flex flex-col">
               <span className="text-[10px] text-emerald-400 font-bold tracking-[0.15em] uppercase mb-1">Gas Cost</span>
@@ -99,10 +97,10 @@ export function HeroSection({ stats }) {
         <div className="flex-shrink-0 w-full lg:w-auto flex justify-center mt-8 lg:mt-0 lg:ml-8 relative">
           
           {/* Outer padding container (The subtle glass border/background) */}
-          <div className="p-4 sm:p-6 rounded-[2.5rem] bg-[#171527]/60 border border-[#a855f7]/10 relative z-10 backdrop-blur-md shadow-[0_0_50px_rgba(168,85,247,0.05)]">
+          <div className="p-4 sm:p-6 rounded-[2.5rem] bg-white/[0.03] border border-white/10 relative z-10 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.3)]">
             
             {/* Inner dark card */}
-            <div className="bg-[#0b0d14] rounded-[1.75rem] p-7 sm:p-8 w-full max-w-[400px] shadow-2xl relative">
+            <div className="bg-[#0b0c10]/80 backdrop-blur-xl border border-white/5 rounded-[1.75rem] p-7 sm:p-8 w-full max-w-[400px] shadow-2xl relative">
               
               {/* Header */}
               <div className="flex justify-between items-start mb-8">

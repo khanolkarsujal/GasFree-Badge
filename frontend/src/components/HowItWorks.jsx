@@ -21,17 +21,17 @@ export function HowItWorks() {
 
   return (
     <section className="py-24 max-w-[1000px] mx-auto text-center border-t border-white/5">
-      <span className="text-[10px] text-indigo-400 font-bold tracking-[0.15em] uppercase mb-4 block">
+      <span className="text-[10px] text-[#a855f7] font-bold tracking-[0.15em] uppercase mb-4 block">
         How it works
       </span>
-      <h2 className="text-[2.2rem] sm:text-[2.75rem] font-bold tracking-tight text-white mb-20">
-        Three steps to your gasless badge
+      <h2 className="text-[2.5rem] sm:text-[3.5rem] font-sans font-extrabold tracking-tight text-white mb-20">
+        Three steps to your gasless badge.
       </h2>
 
       <div className="flex flex-col md:flex-row items-start justify-between gap-12 md:gap-4 text-left relative">
         {steps.map((step, i) => (
           <div key={i} className="flex-1 relative">
-            <div className="text-[4rem] sm:text-[5rem] font-bold text-[#1e293b]/50 leading-none mb-4 -ml-1">
+            <div className="text-[5rem] sm:text-[6rem] font-sans font-black text-white/[0.03] leading-none mb-4 -ml-2 tracking-tighter">
               {step.num}
             </div>
             <h3 className="text-[1.1rem] font-bold text-white mb-3">

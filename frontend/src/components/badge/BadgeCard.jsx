@@ -35,13 +35,13 @@ export function BadgeCard({ badge, isClaimed, disabled, onClaim, labelOverride, 
 
     if (!isWalletReady) {
       return (
-        <button
-          type="button"
-          onClick={onClaim} // This triggers connect wallet now based on App.jsx
-          className="w-full sm:w-auto px-5 py-2 rounded-[8px] border border-purple-500 text-purple-400 bg-transparent hover:bg-purple-500/10 text-[0.85rem] font-bold whitespace-nowrap transition-colors"
-        >
-          Connect to Claim
-        </button>
+          <button
+            type="button"
+            onClick={onClaim}
+            className="w-full sm:w-auto px-4 py-2 rounded-[10px] bg-white hover:bg-gray-200 text-black text-[0.8rem] font-bold whitespace-nowrap transition-all shadow-sm"
+          >
+            Connect to Claim
+          </button>
       );
     }
 
@@ -52,8 +52,7 @@ export function BadgeCard({ badge, isClaimed, disabled, onClaim, labelOverride, 
         onClick={() => onClaim(badge)}
         disabled={disabled}
         aria-label={`Claim ${badge.name} badge`}
-        className="w-full sm:w-auto px-6 py-2.5 rounded-[8px] text-white text-[0.85rem] font-bold border-none cursor-pointer whitespace-nowrap transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:pointer-events-none shadow-[0_4px_14px_rgba(245,158,11,0.3)]"
-        style={{ background: `linear-gradient(135deg, ${badge.colors[0]}, ${badge.colors[1]})` }}
+        className="w-full sm:w-auto px-4 py-2 rounded-[10px] bg-[#2A2B3D] hover:bg-[#3f415c] text-white text-[0.8rem] font-bold border border-white/5 cursor-pointer whitespace-nowrap transition-all disabled:opacity-35 disabled:cursor-not-allowed"
       >
         {labelOverride || 'Claim free'}
       </button>
@@ -67,8 +66,8 @@ export function BadgeCard({ badge, isClaimed, disabled, onClaim, labelOverride, 
           'group relative flex flex-row items-stretch rounded-xl border overflow-hidden min-h-[220px] md:col-span-2',
           'transition-[border-color,transform,box-shadow] duration-300',
           isClaimed
-            ? 'bg-[#0a1a0f] border-[#10b981]/[0.2]'
-            : 'bg-[#12141c] border-white/5 hover:border-white/10 hover:-translate-y-px hover:shadow-[0_0_20px_rgba(245,158,11,0.1)]',
+            ? 'bg-[#0a1a0f]/40 backdrop-blur-xl border-[#10b981]/[0.2] shadow-lg'
+            : 'bg-[#0b0c10]/50 backdrop-blur-xl border-white/10 hover:border-white/20 hover:-translate-y-px hover:shadow-[0_8px_30px_rgba(245,158,11,0.15)] shadow-xl',
         ].join(' ')}
         aria-label={`${badge.name} Badge${isClaimed ? ' — collected' : ''}`}
       >
@@ -78,8 +77,8 @@ export function BadgeCard({ badge, isClaimed, disabled, onClaim, labelOverride, 
         )}
 
         {/* Distinct Illustration Left Side */}
-        <div className="w-[200px] shrink-0 flex items-center justify-center bg-[#150a05] rounded-l-xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent animate-pulse" style={{ animationDuration: '4s' }} />
+        <div className="w-[200px] shrink-0 flex items-center justify-center bg-black/40 rounded-l-xl relative overflow-hidden border-r border-white/5">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
           <div className="w-[112px] h-[112px] rounded-full bg-white/[0.07] flex items-center justify-center z-10 group-hover:scale-110 transition-transform duration-500">
             <div className="w-[80px] h-[80px] flex items-center justify-center text-[4rem]">
               {badge.icon}
@@ -121,8 +120,8 @@ export function BadgeCard({ badge, isClaimed, disabled, onClaim, labelOverride, 
         'group relative flex items-center gap-0 rounded-[10px] border overflow-hidden',
         'transition-[border-color,transform,box-shadow] duration-150',
         isClaimed
-          ? 'bg-[#0a1a0f] border-[#10b981]/[0.16]'
-          : 'bg-[#0e1520] border-white/[0.06] hover:-translate-y-px',
+          ? 'bg-[#0a1a0f]/40 backdrop-blur-xl border-[#10b981]/[0.16] shadow-lg'
+          : 'bg-[#0b0c10]/50 backdrop-blur-xl border-white/10 hover:-translate-y-px shadow-lg',
         isRare && !isClaimed ? 'hover:border-white/[0.15]' : 'hover:border-white/[0.11]',
       ].join(' ')}
       aria-label={`${badge.name} Badge${isClaimed ? ' — collected' : ''}`}

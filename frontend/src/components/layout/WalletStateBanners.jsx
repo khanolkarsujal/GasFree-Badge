@@ -29,7 +29,7 @@ export function WalletStateBanners({ wallet, collection }) {
     >
       {/* 1. Connect Wallet Banner */}
       {!wallet.account && (
-        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 px-6 py-5 rounded-2xl bg-[#0e1520]/60 border border-white/5 shadow-xl backdrop-blur-md relative overflow-hidden group">
+        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 px-6 py-5 rounded-2xl bg-[#0b0c10]/50 border border-white/10 shadow-xl backdrop-blur-2xl relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
           <div className="flex items-start gap-4 relative z-10">
@@ -67,9 +67,9 @@ export function WalletStateBanners({ wallet, collection }) {
               type="button"
               onClick={wallet.error === 'no_provider' ? () => window.open('https://metamask.io', '_blank') : wallet.connect}
               disabled={wallet.loading}
-              className={`relative px-5 py-2.5 rounded-xl text-[0.85rem] font-semibold transition-all duration-300 overflow-hidden flex items-center gap-2 ${wallet.error === 'no_provider'
+              className={`relative px-5 py-2.5 rounded-xl text-[0.85rem] font-bold transition-all duration-300 overflow-hidden flex items-center gap-2 ${wallet.error === 'no_provider'
                   ? 'bg-slate-800 text-slate-300 hover:text-white border border-white/10 hover:border-white/20'
-                  : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_4px_16px_rgba(99,102,241,0.3)]'
+                  : 'bg-white text-black hover:bg-gray-200 shadow-sm'
                 } disabled:opacity-60 disabled:cursor-not-allowed`}
             >
               {wallet.error === 'no_provider'
