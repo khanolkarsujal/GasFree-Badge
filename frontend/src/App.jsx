@@ -36,11 +36,181 @@ import { executeGaslessClaim, executeGaslessTokenTransfer, getTYIBalance } from 
 import { sessionStore } from "@/services/sessionStore";
 import { BADGES } from "@/lib/constants";
 import { CONTRACT_ADDRESS } from "@/contractConfig";
-import { Header, Footer, HeroSection, MyCollection, HowItWorks, CallToAction, ClaimModal, Features, BadgeCard } from "@/components";
+import { ClaimModal } from "@/components";
 import { basescanAddress, copyToClipboard } from "@/lib/utils";
 
 const isDeployed = CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000";
 
+function Nav({ wallet, collection }) {
+  return (
+    <header className="relative z-20 border-b border-white/5">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+        <a href="#" className="flex items-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[oklch(0.45_0.2_295)] to-[oklch(0.3_0.18_285)] shadow-[0_0_24px_-4px_oklch(0.6_0.2_295/0.6)]">
+            <Shield className="h-4 w-4 text-white" />
+          </span>
+          <span className="font-heading text-[15px] font-semibold tracking-tight text-white">GasFreeBadge</span>
+        </a>
+        <nav className="hidden items-center gap-9 text-sm text-muted-foreground md:flex">
+          <a
+            href={basescanAddress(CONTRACT_ADDRESS)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-white"
+          >
+            Contract
+          </a>
+          <a
+            href="https://universalgasframework.com/docs/overview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-white"
+          >
+            UGF Docs
+          </a>
+        </nav>
+        <div className="flex items-center gap-3">
+          {wallet.account && wallet.isRightChain && collection && (
+            <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs text-white">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <span className="font-semibold text-white/90">
+                {collection.tyiBalance !== null ? `${collection.tyiBalance.toFixed(2)} TYI` : "0.00 TYI"}
+              </span>
+            </div>
+          )}
+          <button
+            onClick={
+              !wallet.account
+                ? wallet.connect
+                : !wallet.isRightChain
+                  ? wallet.switchToBaseSepolia
+                  : undefined
+            }
+            className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all hover:shadow-[0_0_24px_-4px_rgba(255,255,255,0.4)] ${wallet.account && !wallet.isRightChain
+                ? "bg-amber-500 hover:bg-amber-400 text-black cursor-pointer font-bold"
+                : "bg-white hover:bg-white/90 text-black"
+              }`}
+          >
+            {!wallet.account
+              ? "Connect Wallet"
+              : !wallet.isRightChain
+                ? "Switch Network"
+                : `${wallet.account.slice(0, 6)}...${wallet.account.slice(-4)}`}
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Hero({ stats, wallet, onConnect }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (e) => {
+    e.preventDefault();
+    const success = await copyToClipboard(CONTRACT_ADDRESS);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <section className="relative overflow-hidden py-20 sm:py-24 lg:py-28">
+      <div
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{ background: "var(--gradient-hero)" }}
+      />
+      <div className="mx-auto grid max-w-7xl items-center gap-16 px-6 lg:grid-cols-2">
+        <div>
+          <h1 className="font-heading text-5xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            Digital
+            <br />
+            credentials.
+            <br />
+            <span className="bg-gradient-to-b from-[oklch(0.85_0.14_295)] to-[oklch(0.6_0.22_295)] bg-clip-text text-transparent">
+              Zero gas
+            </span>
+            <br />
+            <span className="bg-gradient-to-b from-[oklch(0.85_0.14_295)] to-[oklch(0.6_0.22_295)] bg-clip-text text-transparent">
+              friction.
+            </span>
+          </h1>
+          <p className="mt-8 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+            Issue verifiable NFT badges on Base Sepolia without forcing users to hold ETH. By leveraging
+            the Universal Gas Framework (UGF), we make on-chain credentialing feel completely invisible
+            to the end user.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-3">
+            <button
+              onClick={
+                !wallet.account
+                  ? onConnect
+                  : !wallet.isRightChain
+                    ? wallet.switchToBaseSepolia
+                    : undefined
+              }
+              className={`rounded-full px-6 py-3 text-sm font-semibold transition-all ${wallet.account && !wallet.isRightChain
+                  ? "bg-amber-500 hover:bg-amber-400 text-black cursor-pointer font-bold"
+                  : "bg-white hover:bg-white/90 text-black"
+                }`}
+            >
+              {!wallet.account
+                ? "Connect Wallet"
+                : !wallet.isRightChain
+                  ? "Switch to Base Sepolia"
+                  : `${wallet.account.slice(0, 6)}...${wallet.account.slice(-4)}`}
+            </button>
+            {wallet.account && (
+              <button
+                onClick={wallet.addTYIToken}
+                className="group flex items-center gap-2 rounded-full border border-[oklch(0.75_0.18_295/0.3)] bg-[oklch(0.75_0.18_295/0.1)] px-6 py-3 text-sm font-semibold text-[oklch(0.75_0.18_295)] hover:bg-[oklch(0.75_0.18_295/0.2)] transition-all cursor-pointer backdrop-blur-sm"
+              >
+                <span>➕</span> Add TYI to Wallet
+              </button>
+            )}
+            <a
+              href="#catalog"
+              className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10"
+            >
+              Try demo flow
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </a>
+          </div>
+          <button
+            onClick={handleCopy}
+            className="mt-8 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs relative hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
+          >
+            <span className="font-semibold uppercase tracking-wider text-muted-foreground">Contract</span>
+            <span className="font-mono text-white/90">
+              {CONTRACT_ADDRESS.slice(0, 8)}...{CONTRACT_ADDRESS.slice(-6)}
+            </span>
+            <ExternalLink className="h-3 w-3 text-muted-foreground" />
+            <AnimatePresence>
+              {copied && (
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: -25 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute left-1/2 -translate-x-1/2 px-2 py-1 bg-white text-black text-[10px] rounded font-bold shadow-lg pointer-events-none whitespace-nowrap z-50"
+                >
+                  Copied!
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </button>
+          <div className="mt-6 grid max-w-lg grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
+            <Stat label="Gas cost" value={<span className="text-[oklch(0.78_0.17_160)]">0 ETH</span>} sub="sponsored by UGF" />
+            <Stat label="Claimed" value={<><span className="text-white">{stats.minted}</span><span className="text-muted-foreground"> /{stats.total.toLocaleString()}</span></>} divider />
+            <Stat label="Network" value={<span className="flex items-center gap-2 text-white"><span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.78_0.17_160)]" />Base Sepolia</span>} divider />
+          </div>
+        </div>
+
+        <CredentialCard isWalletReady={!!wallet.account} />
+      </div>
+    </section>
+  );
+}
 
 function Stat({ label, value, sub, divider }) {
   return (
@@ -52,6 +222,42 @@ function Stat({ label, value, sub, divider }) {
   );
 }
 
+function CredentialCard({ isWalletReady }) {
+  return (
+    <div
+      className="relative rounded-3xl border border-white/10 p-6 shadow-[0_30px_80px_-20px_rgba(120,80,220,0.35)] sm:p-7 transition-all duration-500 hover:shadow-[0_30px_80px_-10px_rgba(120,80,220,0.5)] hover:-translate-y-1"
+      style={{ background: "var(--gradient-card)" }}
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Credential preview</div>
+          <h3 className="mt-2 font-heading text-2xl font-bold text-white">Professional Badge</h3>
+        </div>
+        <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-[oklch(0.7_0.2_295)] to-[oklch(0.5_0.22_290)] shadow-[0_0_24px_-4px_oklch(0.6_0.22_295/0.7)] animate-float">
+          <Shield className="h-5 w-5 text-white" />
+        </span>
+      </div>
+      <div className="mt-6 space-y-2.5">
+        <Row label="Wallet status" value={<span className="text-[oklch(0.78_0.17_160)]">{isWalletReady ? "Connected" : "Ready to claim"}</span>} />
+        <Row label="Gas sponsor" value="GasFreeBadge" />
+        <Row label="Verification" value="BaseScan linked" />
+      </div>
+      <div className="mt-4 flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/5">
+          <FileText className="h-4 w-4 text-white/80" />
+        </span>
+        <div>
+          <div className="text-sm font-semibold text-white">
+            {isWalletReady ? "Wallet Connected" : "Wallet Connection Required"}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {isWalletReady ? "Choose any badge from the catalog below to claim it instantly." : "Connect your wallet to claim a badge. No ETH is required."}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Row({ label, value }) {
   return (
@@ -133,18 +339,17 @@ function PaymentsPlayground({
             <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
               Donate stablecoins gaslessly to fuel open-source developers. The framework handles the exchange gas fees.
             </p>
-            
+
             <div className="mt-4 space-y-3">
               <div className="flex gap-2">
                 {["5", "10", "25"].map((val) => (
                   <button
                     key={val}
                     onClick={() => setDonationAmount(val)}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                      donationAmount === val 
-                        ? "bg-white text-black border-white" 
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all ${donationAmount === val
+                        ? "bg-white text-black border-white"
                         : "border-white/10 bg-white/5 text-white hover:bg-white/10"
-                    }`}
+                      }`}
                   >
                     {val} TYI
                   </button>
@@ -162,7 +367,7 @@ function PaymentsPlayground({
               </div>
             </div>
           </div>
-          
+
           <button
             disabled={simActive || !donationAmount}
             onClick={handleDonate}
@@ -183,7 +388,7 @@ function PaymentsPlayground({
             <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
               Experience an elegant commercial checkout. Buy a simulated developer license with mock stablecoins.
             </p>
-            
+
             <div className="mt-5 rounded-2xl border border-white/[0.06] bg-black/30 p-4 space-y-2 text-xs font-mono">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Pro License</span>
@@ -199,15 +404,14 @@ function PaymentsPlayground({
               </div>
             </div>
           </div>
-          
+
           <button
             disabled={simActive || paymentCompleted}
             onClick={handleCheckout}
-            className={`mt-6 w-full rounded-xl py-2.5 text-xs font-semibold transition-all duration-200 ${
-              paymentCompleted
+            className={`mt-6 w-full rounded-xl py-2.5 text-xs font-semibold transition-all duration-200 ${paymentCompleted
                 ? "bg-emerald-950/20 border border-emerald-500/20 text-emerald-400 cursor-default"
                 : "bg-white text-black hover:bg-white/90 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer"
-            }`}
+              }`}
           >
             {checkoutBtnText}
           </button>
@@ -224,7 +428,7 @@ function PaymentsPlayground({
             <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
               Enable automated, recurring subscription logic. Users sign once; future debits require zero manual clicks.
             </p>
-            
+
             <div className="mt-4 p-4 rounded-2xl border border-white/[0.06] bg-black/30 flex items-center justify-between">
               <div>
                 <div className="text-xs font-bold text-white">Developer API Hub</div>
@@ -233,18 +437,16 @@ function PaymentsPlayground({
               <button
                 disabled={simActive}
                 onClick={handleToggleSubscription}
-                className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 relative focus:outline-none ${
-                  subscriptionEnabled ? "bg-emerald-500" : "bg-white/10"
-                }`}
+                className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 relative focus:outline-none ${subscriptionEnabled ? "bg-emerald-500" : "bg-white/10"
+                  }`}
               >
                 <div
-                  className={`w-5 h-5 rounded-full bg-white transition-transform duration-300 ${
-                    subscriptionEnabled ? "translate-x-6" : "translate-x-0"
-                  }`}
+                  className={`w-5 h-5 rounded-full bg-white transition-transform duration-300 ${subscriptionEnabled ? "translate-x-6" : "translate-x-0"
+                    }`}
                 />
               </button>
             </div>
-            
+
             <div className="mt-4 text-[10px] text-muted-foreground text-center">
               {subscriptionEnabled ? (
                 <span className="text-emerald-400 font-semibold">✓ Gasless Auto-Billing Active (Debits Session Wallet)</span>
@@ -253,7 +455,7 @@ function PaymentsPlayground({
               )}
             </div>
           </div>
-          
+
           <div className="mt-6 text-[11px] border border-white/5 rounded-xl px-3 py-2 bg-black/20 text-muted-foreground flex justify-between items-center leading-none">
             <span>Subscription Status:</span>
             <span className={subscriptionEnabled ? "text-emerald-400 font-bold" : "text-white/60 font-bold"}>
@@ -333,7 +535,7 @@ function AgenticPlayground({
             <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
               Transfer mock assets or stablecoins to any recipient address gaslessly. Zero ETH required in either wallet.
             </p>
-            
+
             <div className="mt-4 space-y-3">
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5 block">Recipient Address</label>
@@ -360,7 +562,7 @@ function AgenticPlayground({
               </div>
             </div>
           </div>
-          
+
           <button
             disabled={simActive || !transferRecipient || !transferAmount}
             onClick={handleSendTokens}
@@ -381,14 +583,14 @@ function AgenticPlayground({
             <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
               Earned loyalty points or rewards? Claim them gaslessly in a single sign action. Ideal for onboarding new users.
             </p>
-            
+
             <div className="mt-5 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] p-6 text-center">
               <span className="text-4xl animate-float block">🎁</span>
               <span className="mt-3 block text-xs text-white font-bold">100 Testnet XP Pending</span>
               <span className="text-[10px] text-emerald-400 mt-1 block">Sponsor: GasFreeBadge</span>
             </div>
           </div>
-          
+
           <button
             disabled={simActive}
             onClick={handleClaimRewards}
@@ -409,7 +611,7 @@ function AgenticPlayground({
             <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
               Authorize an AI Agent session. The agent trades or checks yield autonomously, paying zero manual gas fees per trade.
             </p>
-            
+
             <div className="mt-4 p-4 rounded-2xl border border-white/[0.06] bg-black/30 flex items-center justify-between">
               <div>
                 <div className="text-xs font-bold text-white">DeFi Yield Router Agent</div>
@@ -418,14 +620,12 @@ function AgenticPlayground({
               <button
                 disabled={simActive}
                 onClick={handleToggleAgent}
-                className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 relative focus:outline-none ${
-                  agentPreauthorized ? "bg-[oklch(0.75_0.18_295)]" : "bg-white/10"
-                }`}
+                className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 relative focus:outline-none ${agentPreauthorized ? "bg-[oklch(0.75_0.18_295)]" : "bg-white/10"
+                  }`}
               >
                 <div
-                  className={`w-5 h-5 rounded-full bg-white transition-transform duration-300 ${
-                    agentPreauthorized ? "translate-x-6" : "translate-x-0"
-                  }`}
+                  className={`w-5 h-5 rounded-full bg-white transition-transform duration-300 ${agentPreauthorized ? "translate-x-6" : "translate-x-0"
+                    }`}
                 />
               </button>
             </div>
@@ -453,7 +653,7 @@ function AgenticPlayground({
               </div>
             )}
           </div>
-          
+
           <div className="mt-6 text-[11px] border border-white/5 rounded-xl px-3 py-2 bg-black/20 text-muted-foreground flex justify-between items-center leading-none">
             <span>Agent Active Status:</span>
             <span className={agentPreauthorized ? "text-emerald-400 font-bold" : "text-white/60 font-bold"}>
@@ -507,7 +707,7 @@ function UGFTerminal({
   setSimError,
 }) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -520,7 +720,7 @@ function UGFTerminal({
           <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[oklch(0.75_0.18_295/0.25)] to-transparent pointer-events-none animate-scan z-10" />
         </>
       )}
-      
+
       {/* Background radial glow */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.06),transparent_70%)]" />
 
@@ -537,7 +737,7 @@ function UGFTerminal({
           </span>
         </div>
       </div>
-      
+
       {/* Steps Indicator */}
       {(simActive || simSuccess) && (
         <div className="relative z-10 grid grid-cols-4 gap-2 mb-6 font-sans">
@@ -549,19 +749,18 @@ function UGFTerminal({
           ].map((s) => (
             <div key={s.step} className="flex flex-col gap-1.5">
               <div className="h-1.5 rounded-full overflow-hidden bg-white/10 relative">
-                <motion.div 
-                  className={`h-full relative overflow-hidden ${
-                    simStep === s.step 
-                      ? "bg-gradient-to-r from-[oklch(0.75_0.18_295)] to-[oklch(0.85_0.14_295)]" 
+                <motion.div
+                  className={`h-full relative overflow-hidden ${simStep === s.step
+                      ? "bg-gradient-to-r from-[oklch(0.75_0.18_295)] to-[oklch(0.85_0.14_295)]"
                       : "bg-gradient-to-r from-[oklch(0.85_0.14_295)] to-[oklch(0.65_0.2_295)]"
-                  }`}
+                    }`}
                   initial={{ width: "0%" }}
-                  animate={{ 
-                    width: simStep > s.step 
-                      ? "100%" 
-                      : simStep === s.step 
-                      ? "65%" 
-                      : "0%" 
+                  animate={{
+                    width: simStep > s.step
+                      ? "100%"
+                      : simStep === s.step
+                        ? "65%"
+                        : "0%"
                   }}
                   transition={{ type: "spring", stiffness: 70, damping: 14 }}
                 >
@@ -570,13 +769,12 @@ function UGFTerminal({
                   )}
                 </motion.div>
               </div>
-              <span className={`text-[10px] font-bold transition-colors duration-300 ${
-                simStep > s.step 
-                  ? "text-emerald-400 font-bold" 
-                  : simStep === s.step 
-                  ? "text-[oklch(0.75_0.18_295)] font-extrabold" 
-                  : "text-muted-foreground"
-              }`}>
+              <span className={`text-[10px] font-bold transition-colors duration-300 ${simStep > s.step
+                  ? "text-emerald-400 font-bold"
+                  : simStep === s.step
+                    ? "text-[oklch(0.75_0.18_295)] font-extrabold"
+                    : "text-muted-foreground"
+                }`}>
                 {s.label}
               </span>
             </div>
@@ -592,8 +790,8 @@ function UGFTerminal({
           </div>
         ) : (
           simLogs.map((log, idx) => (
-            <motion.div 
-              key={idx} 
+            <motion.div
+              key={idx}
               initial={{ opacity: 0, y: 6, filter: "blur(1px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ duration: 0.25, ease: "easeOut" }}
@@ -604,10 +802,10 @@ function UGFTerminal({
                 log.text.includes("success") || log.text.includes("successful") || log.text.includes("successfully")
                   ? "text-emerald-400 font-semibold"
                   : log.text.includes("failed") || log.text.includes("Error")
-                  ? "text-red-400 font-semibold animate-pulse"
-                  : log.text.includes("Step")
-                  ? "text-white font-semibold"
-                  : ""
+                    ? "text-red-400 font-semibold animate-pulse"
+                    : log.text.includes("Step")
+                      ? "text-white font-semibold"
+                      : ""
               }>
                 {log.text}
               </span>
@@ -615,10 +813,10 @@ function UGFTerminal({
           ))
         )}
       </div>
-      
+
       {/* JAW-DROPPING SUCCESS RECEIPT CARD */}
       {simSuccess && simTxHash && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.4, type: "spring", bounce: 0.25 }}
@@ -626,15 +824,15 @@ function UGFTerminal({
         >
           {/* Neon radial backdrop */}
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.06),transparent_70%)]" />
-          
+
           <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/35 flex items-center justify-center shrink-0 shadow-[0_0_24px_rgba(16,185,129,0.15)] animate-pulse">
             <CheckCircle2 className="w-6 h-6 text-emerald-400" />
           </div>
-          
+
           <div className="flex-1 w-full text-center md:text-left">
             <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">UGF remote execution confirmed!</div>
             <h4 className="font-heading text-base font-bold text-white mt-1">Transaction Settled Gaslessly</h4>
-            
+
             <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs font-sans border-t border-white/5 pt-3.5">
               <div className="flex justify-between border-b border-white/5 pb-1.5">
                 <span className="text-muted-foreground">Native ETH Cost:</span>
@@ -650,7 +848,7 @@ function UGFTerminal({
               </div>
             </div>
           </div>
-          
+
           <div className="shrink-0 w-full md:w-auto">
             <a
               href={simTxHash.startsWith("0x") && simTxHash.length === 66 ? `https://sepolia.basescan.org/tx/${simTxHash}` : "#"}
@@ -666,7 +864,7 @@ function UGFTerminal({
 
       {/* JAW-DROPPING CYBERNETIC ERROR CARD */}
       {simError && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.4, type: "spring", bounce: 0.25 }}
@@ -674,21 +872,21 @@ function UGFTerminal({
         >
           {/* Neon radial backdrop */}
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.06),transparent_70%)]" />
-          
+
           <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/35 flex items-center justify-center shrink-0 shadow-[0_0_24px_rgba(239,68,68,0.15)]">
             <AlertCircle className="w-6 h-6 text-red-500 animate-bounce" />
           </div>
-          
+
           <div className="flex-1 w-full text-center md:text-left">
             <div className="text-[10px] font-bold text-red-400 uppercase tracking-widest">UGF remote execution failed</div>
             <h4 className="font-heading text-base font-bold text-white mt-1">Transaction Execution Halted</h4>
             <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-              {simError === "NO_MOCK_USD" 
+              {simError === "NO_MOCK_USD"
                 ? "Your wallet does not have sufficient Mock USD (TYI) stablecoins to cover the sponsored gas fee. Please acquire Mock USD from the official faucet."
                 : `Error Reason: ${simError}`}
             </p>
           </div>
-          
+
           <div className="shrink-0 w-full md:w-auto flex flex-col sm:flex-row gap-2">
             {simError === "NO_MOCK_USD" && (
               <a
@@ -774,33 +972,30 @@ function UGFPlaygroundsSection({
       <div className="flex flex-wrap items-center justify-center gap-3 p-1.5 bg-white/[0.02] border border-white/5 rounded-2xl max-w-3xl mx-auto mb-12 backdrop-blur-md">
         <button
           onClick={() => setActiveTrack('minting')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
-            activeTrack === 'minting'
+          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${activeTrack === 'minting'
               ? "bg-white text-black shadow-lg shadow-white/5 translate-y-[-1px]"
               : "text-muted-foreground hover:text-white hover:bg-white/5"
-          }`}
+            }`}
         >
           <ShieldCheck className="h-4 w-4" />
           Minting & Credentials
         </button>
         <button
           onClick={() => setActiveTrack('payments')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
-            activeTrack === 'payments'
+          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${activeTrack === 'payments'
               ? "bg-white text-black shadow-lg shadow-white/5 translate-y-[-1px]"
               : "text-muted-foreground hover:text-white hover:bg-white/5"
-          }`}
+            }`}
         >
           <CreditCard className="h-4 w-4" />
           Payments & Checkout
         </button>
         <button
           onClick={() => setActiveTrack('wallet-agents')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
-            activeTrack === 'wallet-agents'
+          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${activeTrack === 'wallet-agents'
               ? "bg-white text-black shadow-lg shadow-white/5 translate-y-[-1px]"
               : "text-muted-foreground hover:text-white hover:bg-white/5"
-          }`}
+            }`}
         >
           <Cpu className="h-4 w-4" />
           Wallet & AI Agents
@@ -850,27 +1045,64 @@ function UGFPlaygroundsSection({
                   const badgeTypeMap = { 0: "explorer", 1: "builder", 2: "pioneer" };
                   const isClaimed = isWalletReady && claimed.some(c => badgeTypeMap[c.badgeType] === badge.id);
                   return (
-                    <BadgeCard
+                    <div
                       key={badge.id}
-                      badge={badge}
-                      isClaimed={isClaimed}
-                      isWalletReady={isWalletReady}
-                      labelOverride={
-                        !wallet.isRightChain
-                          ? "Switch Network"
-                          : isClaiming
-                          ? "Claiming..."
-                          : "Claim Badge"
-                      }
-                      disabled={isClaiming || !isDeployed}
-                      onClaim={
-                        !wallet.account
-                          ? wallet.connect
-                          : !wallet.isRightChain
-                          ? wallet.switchToBaseSepolia
-                          : () => onClaim(badge)
-                      }
-                    />
+                      className="relative rounded-3xl border border-white/10 p-6 flex flex-col justify-between transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_50px_oklch(0.75_0.18_295/0.12)] hover:-translate-y-1 group/card"
+                      style={{ background: "var(--gradient-card)" }}
+                    >
+                      <div>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{badge.rarity} Badge</div>
+                            <h3 className="mt-2 font-heading text-xl font-bold text-white">{badge.name}</h3>
+                          </div>
+                          <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/5 transition-transform duration-300 group-hover/card:scale-110">
+                            <span className="text-lg">{badge.icon}</span>
+                          </span>
+                        </div>
+                        <p className="mt-4 text-xs leading-relaxed text-muted-foreground min-h-[40px]">{badge.desc}</p>
+
+                        <div className="mt-5 space-y-2">
+                          <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-2.5 text-xs">
+                            <span className="text-muted-foreground">Status</span>
+                            <span className={isClaimed ? "text-emerald-400 font-semibold" : "text-white"}>
+                              {isClaimed ? "Collected" : "Ready to claim"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-2.5 text-xs">
+                            <span className="text-muted-foreground">Gas fee</span>
+                            <span className="text-emerald-400 font-semibold">Sponsored</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        disabled={isClaimed || isClaiming || !isDeployed}
+                        onClick={
+                          isClaimed
+                            ? undefined
+                            : !wallet.account
+                              ? wallet.connect
+                              : !wallet.isRightChain
+                                ? wallet.switchToBaseSepolia
+                                : () => onClaim(badge)
+                        }
+                        className={`mt-6 w-full rounded-xl py-2.5 text-xs font-semibold transition-all duration-200 ${isClaimed
+                            ? "bg-emerald-950/20 border border-emerald-500/20 text-emerald-400 cursor-default"
+                            : wallet.account && !wallet.isRightChain
+                              ? "bg-amber-500 text-black hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] cursor-pointer"
+                              : "bg-white text-black hover:bg-white/90 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer"
+                          }`}
+                      >
+                        {isClaimed
+                          ? "Collected"
+                          : !wallet.account
+                            ? "Connect to Claim"
+                            : !wallet.isRightChain
+                              ? "Switch to Base Sepolia"
+                              : "Claim Badge"}
+                      </button>
+                    </div>
                   );
                 })}
               </div>
@@ -933,6 +1165,33 @@ function UGFPlaygroundsSection({
   );
 }
 
+
+function MyCollectionSection({ claimed, badges }) {
+  const badgeTypeMap = { 0: 'explorer', 1: 'builder', 2: 'pioneer' };
+
+  return (
+    <section className="mx-auto max-w-7xl px-6 py-8">
+      <div className="rounded-3xl border border-white/10 p-6 bg-white/[0.02]">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-400">Your collection</div>
+        <h3 className="mt-2 font-heading text-xl font-bold text-white">Collected Badges</h3>
+        <div className="mt-4 flex flex-wrap gap-3">
+          {claimed.map((item) => {
+            const id = badgeTypeMap[item.badgeType];
+            const badge = badges.find((b) => b.id === id);
+            if (!badge) return null;
+            return (
+              <span key={item.tokenId} className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-950/10 px-4 py-2 text-xs font-semibold text-emerald-400">
+                <span>{badge.icon}</span>
+                <span>{badge.name}</span>
+                <Check className="h-3 w-3" />
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function ProblemSolution() {
   return (
@@ -999,6 +1258,83 @@ function Eyebrow({ children, color }) {
   return <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${c}`}>{children}</div>;
 }
 
+function Features() {
+  return (
+    <section className="mx-auto max-w-7xl px-6 py-16">
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+        <div className="pt-2">
+          <Eyebrow color="purple">Key features</Eyebrow>
+          <h2 className="mt-5 font-heading text-3xl font-bold text-white sm:text-4xl">
+            A flawless Web3 experience for everyone.
+          </h2>
+          <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
+            We stripped away the complexity of gas networks so your users can focus on their achievements.
+          </p>
+        </div>
+        <div
+          className="rounded-3xl border border-[oklch(0.5_0.2_295/0.4)] p-7 shadow-[0_0_60px_-20px_oklch(0.5_0.2_295/0.6)]"
+          style={{ background: "linear-gradient(155deg, oklch(0.18 0.06 290), oklch(0.1 0.03 280))" }}
+        >
+          <span className="grid h-10 w-10 place-items-center rounded-lg bg-white/10">
+            <Check className="h-4 w-4 text-white" />
+          </span>
+          <h3 className="mt-12 font-heading text-2xl font-bold text-white">Powered by UGF</h3>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            We utilize the Universal Gas Framework to absorb network costs via Mock USD, entirely removing the first-time user barrier.
+          </p>
+        </div>
+      </div>
+      <div className="mt-6 grid gap-6 md:grid-cols-3">
+        <Feature icon={<ShieldCheck className="h-4 w-4 text-[oklch(0.78_0.17_160)]" />} title="Permanent Ownership" desc="Badges live entirely on-chain, creating a permanent, verifiable record of achievement." />
+        <Feature icon={<FileText className="h-4 w-4 text-[oklch(0.75_0.18_295)]" />} title="Clear & Transparent" desc="Users see exactly what they earned and who issued it before they sign any action." />
+        <Feature icon={<FileText className="h-4 w-4 text-[oklch(0.7_0.18_250)]" />} title="Easily Verifiable" desc="Contract details, UGF documentation, and BaseScan links are always accessible." />
+      </div>
+    </section>
+  );
+}
+
+function Feature({ icon, title, desc }) {
+  return (
+    <Card className="!p-7">
+      <span className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/[0.03]">{icon}</span>
+      <h4 className="mt-5 font-heading text-lg font-bold text-white">{title}</h4>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+    </Card>
+  );
+}
+
+function Workflow() {
+  const steps = [
+    { n: "01", t: "Connect Wallet", d: "The user connects a preferred wallet. Absolutely no ETH is required to start.", c: "text-[oklch(0.75_0.18_295)]" },
+    { n: "02", t: "Claim via UGF", d: "GasFreeBadge routes the transaction through the Universal Gas Framework so the user never worries about network fees.", c: "text-[oklch(0.78_0.17_160)]" },
+    { n: "03", t: "Own & Verify", d: "The badge becomes an inspectable on-chain credential with a clear contract trail on BaseScan.", c: "text-[oklch(0.7_0.18_250)]" },
+  ];
+  return (
+    <section className="mx-auto grid max-w-7xl gap-10 px-6 py-16 lg:grid-cols-[1fr_1.4fr]">
+      <div>
+        <Eyebrow color="green">Product workflow</Eyebrow>
+        <h2 className="mt-5 font-heading text-3xl font-bold text-white sm:text-4xl">
+          Three steps from wallet to credential.
+        </h2>
+        <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
+          A simple 'quote, settle, execute' flow that anyone can complete in seconds.
+        </p>
+      </div>
+      <div className="space-y-4">
+        {steps.map((s) => (
+          <div key={s.n} className="flex items-start gap-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6 transition-all duration-300 hover:bg-white/[0.04] hover:border-white/15">
+            <span className={`font-heading text-2xl font-bold ${s.c}`}>{s.n}</span>
+            <div>
+              <h4 className="font-heading text-lg font-bold text-white">{s.t}</h4>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{s.d}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Tech({ wallet }) {
   return (
     <section className="mx-auto grid max-w-7xl gap-6 px-6 py-16 lg:grid-cols-3">
@@ -1008,7 +1344,7 @@ function Tech({ wallet }) {
           Abstracting away the complexity.
         </h2>
         <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-          Normally, to do anything on Ethereum, you need ETH sitting in your wallet just to pay for the action. 
+          Normally, to do anything on Ethereum, you need ETH sitting in your wallet just to pay for the action.
           <span className="text-white font-semibold"> UGF removes that requirement.</span> The user pays with Mock USD. UGF handles the rest and gets the transaction done.
         </p>
         <p className="mt-4 text-xs font-bold uppercase tracking-wider text-[oklch(0.75_0.18_295)] bg-[oklch(0.75_0.18_295/0.1)] px-3 py-2 rounded-lg border border-[oklch(0.75_0.18_295/0.2)] inline-block">
@@ -1133,6 +1469,106 @@ function Tech({ wallet }) {
 function Dot({ c }) {
   const col = c === "purple" ? "bg-[oklch(0.75_0.18_295)]" : c === "green" ? "bg-[oklch(0.78_0.17_160)]" : "bg-[oklch(0.7_0.18_250)]";
   return <span className={`h-1.5 w-1.5 rounded-full ${col}`} />;
+}
+
+function CTA({ wallet, onConnect }) {
+  return (
+    <section className="border-t border-white/10 py-12 sm:py-16">
+      <div className="mx-auto max-w-7xl px-6">
+        <div
+          className="flex flex-col items-start justify-between gap-8 rounded-3xl border border-white/10 p-8 sm:p-12 lg:flex-row lg:items-center"
+          style={{ background: "var(--gradient-card)" }}
+        >
+          <div className="max-w-xl">
+            <Eyebrow color="purple">Need this?</Eyebrow>
+            <h2 className="mt-4 font-heading text-3xl font-bold text-white sm:text-4xl">
+              Experience invisible Web3.
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              Connect a wallet below to try the live demo. See firsthand how UGF removes technical friction to create a magical user experience.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={
+                !wallet.account
+                  ? onConnect
+                  : !wallet.isRightChain
+                    ? wallet.switchToBaseSepolia
+                    : undefined
+              }
+              className={`rounded-full px-8 py-3 text-sm font-semibold transition-all hover:shadow-[0_0_24px_-4px_rgba(255,255,255,0.4)] ${wallet.account && !wallet.isRightChain
+                  ? "bg-amber-500 hover:bg-amber-400 text-black cursor-pointer font-bold"
+                  : "bg-white hover:bg-white/90 text-black"
+                }`}
+            >
+              {!wallet.account
+                ? "Connect Wallet"
+                : !wallet.isRightChain
+                  ? "Switch to Base Sepolia"
+                  : "Connected"}
+            </button>
+            <a
+              href="#catalog"
+              className="rounded-full border border-white/15 bg-white/[0.03] px-8 py-3 text-sm font-semibold text-white transition-all hover:bg-white/10 text-center"
+            >
+              View Credentials
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-white/5">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[oklch(0.45_0.2_295)] to-[oklch(0.3_0.18_285)]">
+            <Shield className="h-3.5 w-3.5 text-white" />
+          </span>
+          <div>
+            <div className="text-sm font-semibold text-white">GasFreeBadge</div>
+            <div className="text-[11px] text-muted-foreground">UGF Hackathon 2026</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-6 text-sm text-muted-foreground">
+          <a
+            href={basescanAddress(CONTRACT_ADDRESS)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white"
+          >
+            Contract
+          </a>
+          <a
+            href="https://github.com/khanolkarsujal/GasFree-Badge#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white"
+          >
+            UGF Docs
+          </a>
+          <a
+            href={basescanAddress(CONTRACT_ADDRESS)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 hover:text-white"
+          >
+            BaseScan <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      </div>
+      <div className="flex justify-center pb-8">
+        <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[oklch(0.75_0.18_295)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.75_0.18_295)]" />
+          Built on Base
+        </span>
+      </div>
+    </footer>
+  );
 }
 
 export default function App() {
@@ -1285,7 +1721,7 @@ export default function App() {
         if (!isTabVisible) return;
         const bal = await getTYIBalance(provider, agentWalletAddress);
         setAgentBalance(bal ?? 0);
-        
+
         if (bal === null || bal < parseFloat(action.amount)) {
           setAgentLogs(prev => [
             ...prev,
@@ -1314,8 +1750,8 @@ export default function App() {
 
         setAgentLogs(prev => [
           ...prev,
-          { 
-            time: new Date().toLocaleTimeString(), 
+          {
+            time: new Date().toLocaleTimeString(),
             text: `[Agent Success] ${action.logSuccess} Tx: ${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
             txHash
           }
@@ -1352,7 +1788,7 @@ export default function App() {
       setSimSuccess(false);
       setSimTxHash("");
       setSimError("");
-      
+
       const logs = [];
       const addLog = (msg) => {
         logs.push({ time: new Date().toLocaleTimeString(), text: msg });
@@ -1424,7 +1860,7 @@ export default function App() {
 
   const handleConfirmDeactivate = async (withdraw) => {
     setShowDeactivateModal(false);
-    
+
     if (withdraw && deactivateBalance > 0.01) {
       const provider = getProvider();
       setSimActive(true);
@@ -1432,7 +1868,7 @@ export default function App() {
       setSimSuccess(false);
       setSimTxHash("");
       setSimError("");
-      
+
       const logs = [];
       const addLog = (msg) => {
         logs.push({ time: new Date().toLocaleTimeString(), text: msg });
@@ -1496,13 +1932,13 @@ export default function App() {
     setFundingError("");
     setFundingLogs([]);
     setFundingStep(0);
-    
+
     const provider = getProvider();
     if (!sessionStore.isActive()) {
       const addr = sessionStore.create(provider);
       setAgentWalletAddress(addr);
     }
-    
+
     setShowAgentModal(true);
   };
 
@@ -1512,7 +1948,7 @@ export default function App() {
     setFundingSuccess(false);
     setFundingTxHash("");
     setFundingError("");
-    
+
     const logs = [];
     const addLog = (msg) => {
       logs.push({ time: new Date().toLocaleTimeString(), text: msg });
@@ -1521,18 +1957,18 @@ export default function App() {
 
     addLog(`[Agent Session] Generating ephemeral Agent keypair...`);
     const provider = getProvider();
-    
+
     let targetAddress = agentWalletAddress;
     if (!targetAddress) {
       targetAddress = sessionStore.create(provider);
       setAgentWalletAddress(targetAddress);
     }
-    
+
     addLog(`[Agent Session] Initializing UGF authorization transfer to agent address: ${targetAddress}...`);
 
     try {
       const signer = await provider.getSigner();
-      
+
       const txHash = await executeGaslessTokenTransfer(
         signer,
         targetAddress,
@@ -1556,14 +1992,14 @@ export default function App() {
       addLog(`[Tx Hash] ${txHash}`);
       setFundingSuccess(true);
       setFundingStep(5);
-      
+
       setAgentPreauthorized(true);
       setAgentBalance(parseFloat(amount));
-      
+
       if (pendingAction === "subscription") {
         setSubscriptionEnabled(true);
       }
-      
+
       collection.refresh(wallet.account);
     } catch (err) {
       console.error("Agent funding error:", err);
@@ -1591,7 +2027,7 @@ export default function App() {
     setSimSuccess(false);
     setSimTxHash("");
     setSimError("");
-    
+
     const logs = [];
     const addLog = (msg) => {
       logs.push({ time: new Date().toLocaleTimeString(), text: msg });
@@ -1604,10 +2040,10 @@ export default function App() {
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
-        
+
         let recipientAddress = CONTRACT_ADDRESS;
         let transferVal = "1";
-        
+
         if (type === "Donation") {
           recipientAddress = CONTRACT_ADDRESS;
           transferVal = donationAmount || "10";
@@ -1632,7 +2068,7 @@ export default function App() {
         }
 
         addLog(`[Step 1/4: Auth] Requesting EIP-191 signature for wallet session login...`);
-        
+
         const realTxHash = await executeGaslessTokenTransfer(
           signer,
           recipientAddress,
@@ -1654,18 +2090,18 @@ export default function App() {
             }
           }
         );
-        
+
         setSimTxHash(realTxHash);
         addLog(`[Step 4/4: Execute] Real transaction successfully mined on-chain!`);
         addLog(`[Tx Hash] ${realTxHash}`);
         setSimSuccess(true);
         setSimStep(5);
         setSimActive(false);
-        
+
         if (type === "Checkout") {
           setPaymentCompleted(true);
         }
-        
+
         // Refresh collection balance
         collection.refresh(wallet.account);
       } catch (err) {
@@ -1682,39 +2118,39 @@ export default function App() {
     // ── Simulated Fallback Path ────────────────────────────────────────────────
     addLog(`[UGF Client] Initializing gasless session for ${type} (${details})...`);
     await new Promise(r => setTimeout(r, 600));
-    
+
     setSimStep(1);
     addLog(`[Step 1/4: Auth] Requesting EIP-191 signature for wallet session login...`);
     await new Promise(r => setTimeout(r, 800));
     addLog(`[Step 1/4: Auth] Signature received from provider. Exchanging for UGF JWT...`);
     await new Promise(r => setTimeout(r, 600));
     addLog(`[Step 1/4: Auth] Authentication successful! Session valid for 60 minutes.`);
-    
+
     await new Promise(r => setTimeout(r, 400));
     setSimStep(2);
     addLog(`[Step 2/4: Quote] Encoding EVM calldata for transaction payload...`);
     await new Promise(r => setTimeout(r, 600));
     addLog(`[Step 2/4: Quote] Requested quote from UGF testnet oracle.`);
     addLog(`[Step 2/4: Quote] Gas Quoted: 0.18 TYI_MOCK_USD (100% sponsored gas).`);
-    
+
     await new Promise(r => setTimeout(r, 400));
     setSimStep(3);
     addLog(`[Step 3/4: Settle] Requesting ERC-3009 transfer signature for 0.18 TYI.`);
     await new Promise(r => setTimeout(r, 800));
     addLog(`[Step 3/4: Settle] Settlement authorization received. Sponsoring 0 ETH gas fee...`);
-    
+
     await new Promise(r => setTimeout(r, 400));
     setSimStep(4);
     addLog(`[Step 4/4: Execute] Submitting transaction to Base Sepolia EVM node...`);
     await new Promise(r => setTimeout(r, 800));
-    const randomHash = "0x" + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join("");
+    const randomHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
     setSimTxHash(randomHash);
     addLog(`[Step 4/4: Execute] Transaction successfully mined on-chain!`);
     addLog(`[Tx Hash] ${randomHash}`);
     setSimSuccess(true);
     setSimStep(5);
     setSimActive(false);
-    
+
     if (type === "Checkout") {
       setPaymentCompleted(true);
     }
@@ -1731,7 +2167,7 @@ export default function App() {
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      
+
       let badgeType = 0;
       if (badge.id === "builder") badgeType = 1;
       else if (badge.id === "pioneer") badgeType = 2;
@@ -1746,14 +2182,14 @@ export default function App() {
         msg === "NO_MOCK_USD"
           ? "NO_MOCK_USD"
           : msg === "MAX_SUPPLY"
-          ? "All badges have been claimed."
-          : msg === "PAUSED"
-          ? "Claiming is paused."
-          : msg.includes("user rejected")
-          ? "Signature cancelled."
-          : msg.length > 120
-          ? `${msg.slice(0, 120)}...`
-          : msg;
+            ? "All badges have been claimed."
+            : msg === "PAUSED"
+              ? "Claiming is paused."
+              : msg.includes("user rejected")
+                ? "Signature cancelled."
+                : msg.length > 120
+                  ? `${msg.slice(0, 120)}...`
+                  : msg;
 
       setClaimError(mapped);
       setActiveStep(0);
@@ -1770,19 +2206,20 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative selection:bg-indigo-500/30 selection:text-indigo-100 overflow-x-hidden">
-      <Header account={wallet.account} isRightChain={wallet.isRightChain} onConnect={wallet.connect} />
-      
+      <Nav wallet={wallet} collection={collection} />
+
       <main>
-        <HeroSection
+        <Hero
           stats={collection.stats}
+          wallet={wallet}
           onConnect={wallet.connect}
         />
 
         {isWalletReady && collection.claimed.length > 0 && (
-          <div className="mx-auto max-w-[1000px] px-6 mt-12">
-            <h3 className="text-xl font-bold text-white mb-6">Collected Badges</h3>
-            <MyCollection claimed={collection.claimed} />
-          </div>
+          <MyCollectionSection
+            claimed={collection.claimed}
+            badges={BADGES}
+          />
         )}
 
         <UGFPlaygroundsSection
@@ -1815,7 +2252,7 @@ export default function App() {
           agentPreauthorized={agentPreauthorized}
           setAgentPreauthorized={setAgentPreauthorized}
           agentLogs={agentLogs}
-          
+
           agentWalletAddress={agentWalletAddress}
           agentBalance={agentBalance}
           handleOpenAgentModal={handleOpenAgentModal}
@@ -1825,9 +2262,9 @@ export default function App() {
 
         <ProblemSolution />
         <Features />
-        <HowItWorks />
+        <Workflow />
         <Tech wallet={wallet} />
-        <CallToAction onConnect={wallet.connect} isWalletReady={!!wallet.account} />
+        <CTA wallet={wallet} onConnect={wallet.connect} />
       </main>
 
       <Footer />
@@ -1939,11 +2376,10 @@ function AgentSessionModal({
                       key={val}
                       onClick={() => setFundAmount(val)}
                       disabled={isFunding}
-                      className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                        fundAmount === val
+                      className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${fundAmount === val
                           ? "bg-white text-black border-white"
                           : "border-white/10 bg-white/5 text-white hover:bg-white/10"
-                      }`}
+                        }`}
                     >
                       {val} TYI
                     </button>
@@ -1964,7 +2400,7 @@ function AgentSessionModal({
 
               {fundingError && (
                 <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-950/10 text-red-400 text-xs leading-relaxed">
-                  {fundingError === "NO_MOCK_USD" 
+                  {fundingError === "NO_MOCK_USD"
                     ? "Insufficient Mock USD (TYI) balance. Please claim from the faucet first."
                     : fundingError}
                 </div>
