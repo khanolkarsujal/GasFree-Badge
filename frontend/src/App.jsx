@@ -17,6 +17,7 @@ import { executeGaslessClaim } from "@/services/ugfService";
 import { BADGES } from "@/lib/constants";
 import { CONTRACT_ADDRESS } from "@/contractConfig";
 import { ClaimModal } from "@/components";
+import { basescanAddress } from "@/lib/utils";
 
 const isDeployed = CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000";
 
@@ -31,8 +32,22 @@ function Nav({ wallet }) {
           <span className="font-heading text-[15px] font-semibold tracking-tight text-white">GasFreeBadge</span>
         </a>
         <nav className="hidden items-center gap-9 text-sm text-muted-foreground md:flex">
-          <a href="#contract" className="transition-colors hover:text-white">Contract</a>
-          <a href="#docs" className="transition-colors hover:text-white">UGF Docs</a>
+          <a
+            href={basescanAddress(CONTRACT_ADDRESS)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-white"
+          >
+            Contract
+          </a>
+          <a
+            href="https://github.com/khanolkarsujal/GasFree-Badge#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-white"
+          >
+            UGF Docs
+          </a>
         </nav>
         <button
           onClick={wallet.account ? undefined : wallet.connect}
@@ -553,9 +568,30 @@ function Footer() {
           </div>
         </div>
         <div className="flex items-center gap-6 text-sm text-muted-foreground">
-          <a href="#contract" className="hover:text-white">Contract</a>
-          <a href="#docs" className="hover:text-white">UGF Docs</a>
-          <a href="#" className="inline-flex items-center gap-1 hover:text-white">BaseScan <ExternalLink className="h-3 w-3" /></a>
+          <a
+            href={basescanAddress(CONTRACT_ADDRESS)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white"
+          >
+            Contract
+          </a>
+          <a
+            href="https://github.com/khanolkarsujal/GasFree-Badge#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white"
+          >
+            UGF Docs
+          </a>
+          <a
+            href={basescanAddress(CONTRACT_ADDRESS)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 hover:text-white"
+          >
+            BaseScan <ExternalLink className="h-3 w-3" />
+          </a>
         </div>
       </div>
       <div className="flex justify-center pb-8">
