@@ -260,11 +260,11 @@ function BadgeCatalogSection({ badges, claimed, isWalletReady, onClaim, wallet, 
 
               <button
                 disabled={isClaimed || isClaiming || !isDeployed}
-                onClick={() => onClaim(badge)}
+                onClick={isWalletReady ? () => onClaim(badge) : wallet.connect}
                 className={`mt-6 w-full rounded-xl py-2.5 text-xs font-semibold transition-all ${
                   isClaimed
                     ? "bg-emerald-950/20 border border-emerald-500/20 text-emerald-400 cursor-default"
-                    : "bg-white text-black hover:bg-white/90"
+                    : "bg-white text-black hover:bg-white/90 cursor-pointer"
                 }`}
               >
                 {isClaimed ? "Collected" : isWalletReady ? "Claim Badge" : "Connect to Claim"}
