@@ -1,61 +1,160 @@
-import { Zap, ArrowLeftRight, ShieldCheck } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Zap, CreditCard, Gift, Wallet, Activity, Gauge, Users, Layers } from "lucide-react";
 
-export function Features() {
+const features = [
+  {
+    icon: Zap,
+    title: "Gasless Transactions",
+    desc: "Execute any onchain action without holding ETH. UGF sponsors 100% of gas fees automatically.",
+    color: "#6D18FF",
+    glow: "rgba(109,24,255,0.35)",
+  },
+  {
+    icon: CreditCard,
+    title: "Mock USD Payments",
+    desc: "Pay with stablecoins (TYI Mock USD) for all gas settlements. No native token juggling required.",
+    color: "#D9B6FF",
+    glow: "rgba(217,182,255,0.25)",
+  },
+  {
+    icon: Gift,
+    title: "NFT Rewards",
+    desc: "Claim verifiable on-chain badges and credentials with zero friction. One click, permanently yours.",
+    color: "#43256E",
+    glow: "rgba(67,37,110,0.5)",
+  },
+  {
+    icon: Wallet,
+    title: "Wallet Simplicity",
+    desc: "Users connect any wallet and start transacting. No faucets, no bridging, no technical barriers.",
+    color: "#6D18FF",
+    glow: "rgba(109,24,255,0.35)",
+  },
+  {
+    icon: Activity,
+    title: "Real-Time Tracking",
+    desc: "Watch every step of your gasless transaction — auth, quote, settle, execute — in live terminal view.",
+    color: "#D9B6FF",
+    glow: "rgba(217,182,255,0.25)",
+  },
+  {
+    icon: Gauge,
+    title: "Instant Execution",
+    desc: "Transactions settle in seconds on Base Sepolia's fast L2 infrastructure. No waiting, no delays.",
+    color: "#43256E",
+    glow: "rgba(67,37,110,0.5)",
+  },
+  {
+    icon: Users,
+    title: "Beginner-Friendly UX",
+    desc: "Designed for first-time Web3 users. If you can use a website, you can use Gaslessio.",
+    color: "#6D18FF",
+    glow: "rgba(109,24,255,0.35)",
+  },
+  {
+    icon: Layers,
+    title: "Base Sepolia Integration",
+    desc: "Built natively on Base Sepolia — fast, secure, and scalable L2 with full EVM compatibility.",
+    color: "#D9B6FF",
+    glow: "rgba(217,182,255,0.25)",
+  },
+];
+
+const containerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 28 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.23, 1, 0.32, 1] } },
+};
+
+function FeatureCard({ icon: Icon, title, desc, color, glow }) {
   return (
-    <section className="py-24 max-w-[1000px] mx-auto text-center">
+    <motion.div
+      variants={itemVariants}
+      whileHover={{ y: -4, scale: 1.02 }}
+      transition={{ duration: 0.3 }}
+      className="relative group rounded-2xl border border-white/[0.07] bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-6 overflow-hidden cursor-default"
+      style={{ boxShadow: `0 0 0 1px rgba(255,255,255,0.04)` }}
+    >
+      {/* Hover glow */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"
+        style={{ boxShadow: `inset 0 0 40px ${glow}` }}
+      />
+      {/* Top border glow on hover */}
+      <div
+        className="absolute top-0 left-6 right-6 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
+      />
 
-      {/* Heading */}
-      <h2 className="text-[2.5rem] sm:text-[3.5rem] font-sans font-extrabold tracking-tight leading-[1.05] mb-6">
-        <span className="text-white">Enterprise-grade infrastructure.</span><br />
-        <span className="text-[#a855f7]">Invisible to the user.</span>
-      </h2>
+      {/* Icon */}
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center mb-5 relative"
+        style={{ background: `${color}20`, border: `1px solid ${color}40` }}
+      >
+        <Icon className="w-5 h-5" style={{ color }} />
+        <div
+          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{ boxShadow: `0 0 20px ${glow}` }}
+        />
+      </div>
 
-      <p className="text-[#94a3b8] text-[1.1rem] leading-[1.6] max-w-[650px] mx-auto mb-16 font-light">
-        The Universal Gas Framework removes friction from onboarding by abstracting complex Web3 mechanics away from your end users.
-      </p>
+      <h3 className="font-heading text-base font-bold text-white mb-2.5">{title}</h3>
+      <p className="text-sm leading-relaxed text-white/45">{desc}</p>
+    </motion.div>
+  );
+}
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+export default function Features() {
+  return (
+    <section id="features" className="relative py-28 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-[#05031F]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[#6D18FF]/8 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(217,182,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
-        {/* Card 1 */}
-        <div className="bg-[#0b0c10]/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-colors flex flex-col justify-between shadow-lg">
-          <div>
-            <div className="w-12 h-12 rounded-[14px] bg-[#1a1528] border border-[#a855f7]/20 flex items-center justify-center mb-8">
-              <Zap className="w-5 h-5 text-[#a855f7]" />
-            </div>
-            <h3 className="text-[1.15rem] text-white font-semibold tracking-tight mb-3">Zero ETH Requirement</h3>
-            <p className="text-[#64748b] text-[0.95rem] leading-relaxed">
-              Users can interact with your dApp immediately. Transactions are sponsored natively without requiring users to bridge or purchase native tokens first.
-            </p>
-          </div>
-        </div>
+      <div className="relative z-10 mx-auto max-w-7xl px-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
+          className="text-center mb-16 max-w-2xl mx-auto"
+        >
+          <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D9B6FF] bg-[#6D18FF]/15 border border-[#6D18FF]/30 px-4 py-2 rounded-full mb-5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D9B6FF]" />
+            Key Features
+          </span>
+          <h2 className="font-heading text-4xl sm:text-5xl font-bold text-white tracking-tight leading-[1.1]">
+            Everything you need for{" "}
+            <span
+              className="bg-clip-text text-transparent"
+              style={{ backgroundImage: "linear-gradient(135deg, #D9B6FF 0%, #6D18FF 100%)" }}
+            >
+              gasless Web3
+            </span>
+          </h2>
+          <p className="mt-5 text-white/45 text-base leading-relaxed">
+            Built on the Universal Gas Framework — the infrastructure layer that makes blockchain invisible to end users.
+          </p>
+        </motion.div>
 
-        {/* Card 2 */}
-        <div className="bg-[#0b0c10]/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-colors flex flex-col justify-between shadow-lg">
-          <div>
-            <div className="w-12 h-12 rounded-[14px] bg-[#1a1528] border border-[#a855f7]/20 flex items-center justify-center mb-8">
-              <ArrowLeftRight className="w-5 h-5 text-[#a855f7]" />
-            </div>
-            <h3 className="text-[1.15rem] text-white font-semibold tracking-tight mb-3">Token Agnostic Settlement</h3>
-            <p className="text-[#64748b] text-[0.95rem] leading-relaxed">
-              Settle gas costs in stablecoins or your own protocol tokens. The framework handles the conversion behind the scenes seamlessly.
-            </p>
-          </div>
-        </div>
-
-        {/* Card 3 */}
-        <div className="bg-[#0b0c10]/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-colors flex flex-col justify-between shadow-lg">
-          <div>
-            <div className="w-12 h-12 rounded-[14px] bg-[#101915] border border-emerald-500/20 flex items-center justify-center mb-8">
-              <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            </div>
-            <h3 className="text-[1.15rem] text-white font-semibold tracking-tight mb-3">No Bundlers Needed</h3>
-            <p className="text-[#64748b] text-[0.95rem] leading-relaxed">
-              A truly native experience that doesn't rely on ERC-4337 infrastructure, paymasters, or external bundler networks. Less complexity, higher reliability.
-            </p>
-          </div>
-        </div>
-
+        {/* Grid */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        >
+          {features.map((f) => (
+            <FeatureCard key={f.title} {...f} />
+          ))}
+        </motion.div>
       </div>
     </section>
   );

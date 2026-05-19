@@ -80,15 +80,15 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl border border-[oklch(0.75_0.18_295/0.2)] bg-[oklch(0.75_0.18_295/0.05)] p-3.5 relative overflow-hidden z-10"
+                  className="rounded-2xl border border-[#6D18FF]/40 bg-[#6D18FF]/10 p-3.5 relative overflow-hidden z-10 shadow-[0_0_20px_rgba(109,24,255,0.15)]"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-[oklch(0.75_0.18_295/0.05)] to-transparent animate-pulse" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#6D18FF]/10 to-transparent animate-pulse" />
                   <div className="flex items-center gap-2 relative z-10">
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[oklch(0.75_0.18_295)] opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[oklch(0.75_0.18_295)]"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D9B6FF] opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D9B6FF]"></span>
                     </span>
-                    <span className="text-[9px] uppercase font-bold tracking-widest text-[oklch(0.75_0.18_295)]">
+                    <span className="text-[9px] uppercase font-bold tracking-widest text-[#D9B6FF]">
                       Processing
                     </span>
                   </div>
@@ -105,7 +105,7 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
               <div className="flex flex-col gap-3 mt-auto pt-5 border-t border-white/10 relative z-10">
                 <div className="flex justify-between items-center text-xs font-semibold">
                   <span className="text-muted-foreground">ETH gas</span>
-                  <span className="text-[oklch(0.78_0.17_160)] bg-[oklch(0.78_0.17_160)]/10 px-2 py-0.5 rounded border border-[oklch(0.78_0.17_160)]/20 font-bold">
+                  <span className="text-[#D9B6FF] bg-[#6D18FF]/20 px-2 py-0.5 rounded border border-[#6D18FF]/30 font-bold">
                     Sponsored
                   </span>
                 </div>
@@ -218,15 +218,15 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
                           key={s.id}
                           className={[
                             "flex items-center gap-4 px-4 py-3.5 rounded-2xl border transition-all duration-300 relative overflow-hidden",
-                            done ? "bg-emerald-950/10 border-emerald-500/20" : "",
+                            done ? "bg-emerald-950/20 border-emerald-500/30" : "",
                             active
-                              ? "border-[oklch(0.75_0.18_295/0.3)] bg-[oklch(0.75_0.18_295/0.05)] shadow-[0_0_30px_-5px_oklch(0.75_0.18_295/0.25)]"
+                              ? "border-[#6D18FF]/50 bg-[#05031F]/80 shadow-[0_0_30px_-5px_rgba(109,24,255,0.4)] backdrop-blur-sm"
                               : "",
-                            pending ? "bg-white/[0.01] border-white/5 opacity-55" : "",
+                            pending ? "bg-white/[0.02] border-white/5 opacity-50" : "",
                           ].join(" ")}
                         >
                           {active && (
-                            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[oklch(0.75_0.18_295)] to-[oklch(0.5_0.22_290)]" />
+                            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#D9B6FF] to-[#6D18FF]" />
                           )}
 
                           {/* Step indicator */}
@@ -245,14 +245,14 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
                             {active && (
                               <>
                                 {/* Radar pulse rings */}
-                                <span className="absolute inset-0 rounded-full bg-[oklch(0.75_0.18_295)] opacity-40 animate-radar" />
+                                <span className="absolute inset-0 rounded-full bg-[#6D18FF] opacity-40 animate-radar" />
                                 <span
-                                  className="absolute inset-0.5 rounded-full bg-[oklch(0.75_0.18_295)] opacity-20 animate-radar"
+                                  className="absolute inset-0.5 rounded-full bg-[#6D18FF] opacity-20 animate-radar"
                                   style={{ animationDelay: "0.6s" }}
                                 />
                                 {/* Center spinning indicator */}
-                                <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-[oklch(0.7_0.2_295)] to-[oklch(0.5_0.22_290)] text-white shadow-[0_0_15px_oklch(0.7_0.2_295/0.4)] flex items-center justify-center">
-                                  <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-[#D9B6FF] to-[#6D18FF] text-white shadow-[0_0_15px_rgba(109,24,255,0.4)] flex items-center justify-center">
+                                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                 </div>
                               </>
                             )}
@@ -275,10 +275,10 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
                             <p
                               className={`text-xs mt-0.5 font-medium ${
                                 done
-                                  ? "text-emerald-500/70"
+                                  ? "text-emerald-500/80"
                                   : active
-                                  ? "text-[oklch(0.75_0.18_295/0.85)] font-semibold"
-                                  : "text-muted-foreground/60"
+                                  ? "text-[#D9B6FF] font-semibold"
+                                  : "text-white/40"
                               }`}
                             >
                               {s.sub}
@@ -290,8 +290,8 @@ export function ClaimModal({ badge, activeStep, txHash, error, isOpen, onClose }
                   </ol>
 
                   {/* Trust footer */}
-                  <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-muted-foreground bg-white/[0.02] py-2.5 rounded-xl border border-white/5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.78_0.17_160)]" />
+                  <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-white/50 bg-white/[0.02] py-2.5 rounded-xl border border-white/5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#6D18FF] shadow-[0_0_8px_rgba(109,24,255,0.8)] animate-pulse" />
                     Zero ETH deducted · Sponsored by UGF
                   </div>
                 </div>

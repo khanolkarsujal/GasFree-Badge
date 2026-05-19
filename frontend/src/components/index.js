@@ -7,4 +7,4 @@ export { ClaimModal } from './badge/ClaimModal';
 export { MyCollection } from './collection/MyCollection';
 export { HowItWorks } from './HowItWorks';
 export { CallToAction } from './CallToAction';
-export { Features } from './Features';
+export { default as Features } from './Features';
