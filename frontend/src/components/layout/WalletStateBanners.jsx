@@ -74,7 +74,9 @@ export function WalletStateBanners({ wallet, collection }) {
               onClick={wallet.error === 'no_provider'
                 ? (wallet.isMobile
                     ? () => {
-                        const dappUrl = window.location.href.replace(/^https?:\/\//, '');
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('connect', 'true');
+                        const dappUrl = url.toString().replace(/^https?:\/\//, '');
                         window.open(`https://metamask.app.link/dapp/${dappUrl}`, '_blank');
                       }
                     : () => window.open('https://metamask.io', '_blank'))

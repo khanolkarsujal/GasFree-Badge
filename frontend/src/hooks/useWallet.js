@@ -40,7 +40,26 @@ export function useWallet() {
       window.ethereum.request({ method: 'eth_accounts' }),
     ]).then(([hex, accounts]) => {
       setChainId(parseInt(hex, 16));
-      if (accounts[0]) setAccount(accounts[0]);
+      if (accounts[0]) {
+        setAccount(accounts[0]);
+      } else {
+        // If we came from a deep link requesting connection, trigger connect request
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('connect') === 'true') {
+          // Clean up the URL query parameter
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('connect');
+          window.history.replaceState({}, '', newUrl.toString());
+          
+          window.ethereum.request({ method: 'eth_requestAccounts' })
+            .then(([acct]) => {
+              setAccount(acct);
+            })
+            .catch((err) => {
+              console.error("Auto connect failed:", err);
+            });
+        }
+      }
     }).catch(() => {});
 
     return () => {
@@ -53,7 +72,9 @@ export function useWallet() {
   const connect = useCallback(async () => {
     if (!hasProvider) {
       if (isMobile) {
-        const dappUrl = window.location.href.replace(/^https?:\/\//, '');
+        const url = new URL(window.location.href);
+        url.searchParams.set('connect', 'true');
+        const dappUrl = url.toString().replace(/^https?:\/\//, '');
         window.open(`https://metamask.app.link/dapp/${dappUrl}`, '_blank');
         return;
       }
