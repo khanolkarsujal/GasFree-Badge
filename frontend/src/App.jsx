@@ -33,6 +33,7 @@ import {
 import { useWallet } from "@/hooks/useWallet";
 import { useCollection } from "@/hooks/useCollection";
 import { executeGaslessClaim, executeGaslessTokenTransfer, getTYIBalance } from "@/services/ugfService";
+import { sessionStore } from "@/services/sessionStore";
 import { BADGES } from "@/lib/constants";
 import { CONTRACT_ADDRESS } from "@/contractConfig";
 import { ClaimModal } from "@/components";
@@ -279,7 +280,7 @@ function PaymentsPlayground({
   runSimulation,
   simActive,
   wallet,
-  agentWallet,
+  agentWalletAddress,
   agentBalance,
   handleOpenAgentModal,
   ensureWalletConnected,
@@ -299,7 +300,7 @@ function PaymentsPlayground({
     if (subscriptionEnabled) {
       setSubscriptionEnabled(false);
     } else {
-      if (!agentWallet) {
+      if (!agentWalletAddress) {
         handleOpenAgentModal("subscription");
       } else {
         await runSimulation("Subscription Permit", "$9.99/mo");
@@ -484,7 +485,7 @@ function AgenticPlayground({
   runSimulation,
   simActive,
   wallet,
-  agentWallet,
+  agentWalletAddress,
   agentBalance,
   handleOpenAgentModal,
   handleDeactivateAgent,
@@ -637,11 +638,11 @@ function AgenticPlayground({
               </button>
             </div>
 
-            {agentPreauthorized && agentWallet && (
+            {agentPreauthorized && agentWalletAddress && (
               <div className="mt-4 p-3 rounded-xl border border-white/5 bg-black/40 space-y-1.5 text-[10px] font-mono">
                 <div className="flex justify-between items-center text-white/50">
                   <span>Agent Address:</span>
-                  <span className="text-white select-all">{agentWallet.address.slice(0, 8)}...{agentWallet.address.slice(-6)}</span>
+                  <span className="text-white select-all">{agentWalletAddress.slice(0, 8)}...{agentWalletAddress.slice(-6)}</span>
                 </div>
                 <div className="flex justify-between items-center text-white/50">
                   <span>Agent Balance:</span>
@@ -956,7 +957,7 @@ function UGFPlaygroundsSection({
   setAgentPreauthorized,
   agentLogs,
   // Agentic additions
-  agentWallet,
+  agentWalletAddress,
   agentBalance,
   handleOpenAgentModal,
   handleDeactivateAgent,
@@ -1054,7 +1055,8 @@ function UGFPlaygroundsSection({
 
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {badges.map((badge) => {
-                  const isClaimed = isWalletReady && claimed.includes(badge.id);
+                  const badgeTypeMap = { 0: "explorer", 1: "builder", 2: "pioneer" };
+                  const isClaimed = isWalletReady && claimed.some(c => badgeTypeMap[c.badgeType] === badge.id);
                   return (
                     <div
                       key={badge.id}
@@ -1132,7 +1134,7 @@ function UGFPlaygroundsSection({
               runSimulation={runSimulation}
               simActive={simActive}
               wallet={wallet}
-              agentWallet={agentWallet}
+              agentWalletAddress={agentWalletAddress}
               agentBalance={agentBalance}
               handleOpenAgentModal={handleOpenAgentModal}
               ensureWalletConnected={ensureWalletConnected}
@@ -1151,7 +1153,7 @@ function UGFPlaygroundsSection({
               runSimulation={runSimulation}
               simActive={simActive}
               wallet={wallet}
-              agentWallet={agentWallet}
+              agentWalletAddress={agentWalletAddress}
               agentBalance={agentBalance}
               handleOpenAgentModal={handleOpenAgentModal}
               handleDeactivateAgent={handleDeactivateAgent}
@@ -1179,17 +1181,20 @@ function UGFPlaygroundsSection({
 
 
 function MyCollectionSection({ claimed, badges }) {
+  const badgeTypeMap = { 0: 'explorer', 1: 'builder', 2: 'pioneer' };
+  
   return (
     <section className="mx-auto max-w-7xl px-6 py-8">
       <div className="rounded-3xl border border-white/10 p-6 bg-white/[0.02]">
         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-400">Your collection</div>
         <h3 className="mt-2 font-heading text-xl font-bold text-white">Collected Badges</h3>
         <div className="mt-4 flex flex-wrap gap-3">
-          {claimed.map((id) => {
+          {claimed.map((item) => {
+            const id = badgeTypeMap[item.badgeType];
             const badge = badges.find((b) => b.id === id);
             if (!badge) return null;
             return (
-              <span key={id} className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-950/10 px-4 py-2 text-xs font-semibold text-emerald-400">
+              <span key={item.tokenId} className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-950/10 px-4 py-2 text-xs font-semibold text-emerald-400">
                 <span>{badge.icon}</span>
                 <span>{badge.name}</span>
                 <Check className="h-3 w-3" />
@@ -1610,11 +1615,14 @@ export default function App() {
   const [subscriptionEnabled, setSubscriptionEnabled] = useState(false);
   const [agentPreauthorized, setAgentPreauthorized] = useState(false);
   const [agentLogs, setAgentLogs] = useState([]);
+  const [isTabVisible, setIsTabVisible] = useState(true);
 
   // Ephemeral Agent Session states
-  const [agentWallet, setAgentWallet] = useState(null);
+  const [agentWalletAddress, setAgentWalletAddress] = useState("");
   const [agentBalance, setAgentBalance] = useState(0);
   const [showAgentModal, setShowAgentModal] = useState(false);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [deactivateBalance, setDeactivateBalance] = useState(0);
   const [pendingAction, setPendingAction] = useState(""); // "agent" or "subscription"
 
   // Modal funding states
@@ -1650,23 +1658,35 @@ export default function App() {
     return () => clearInterval(id);
   }, [wallet.account]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const handleVisibilityChange = () => {
+      setIsTabVisible(document.visibilityState === 'visible');
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   // Effect for rolling autonomous AI agent real transactions
   useEffect(() => {
-    if (!agentPreauthorized || !agentWallet) {
+    if (!agentPreauthorized || !agentWalletAddress) {
       setAgentLogs([]);
       return;
     }
 
     const provider = getProvider();
-    const agentSigner = new ethers.Wallet(agentWallet.privateKey, provider);
+    const agentSigner = sessionStore.getSigner(provider);
+    if (!agentSigner) return;
 
     const initialLogs = [
-      { time: new Date().toLocaleTimeString(), text: `[Agent] Autonomous agent initialized. Address: ${agentWallet.address.slice(0, 6)}...${agentWallet.address.slice(-4)}` },
+      { time: new Date().toLocaleTimeString(), text: `[Agent] Autonomous agent initialized. Address: ${agentWalletAddress.slice(0, 6)}...${agentWalletAddress.slice(-4)}` },
       { time: new Date().toLocaleTimeString(), text: "[Agent] Pre-authorized session active. Checking balance..." }
     ];
     setAgentLogs(initialLogs);
 
-    getTYIBalance(provider, agentWallet.address).then(bal => {
+    getTYIBalance(provider, agentWalletAddress).then(bal => {
       setAgentBalance(bal ?? 0);
       setAgentLogs(prev => [
         ...prev,
@@ -1713,7 +1733,8 @@ export default function App() {
       ].slice(-10));
 
       try {
-        const bal = await getTYIBalance(provider, agentWallet.address);
+        if (!isTabVisible) return;
+        const bal = await getTYIBalance(provider, agentWalletAddress);
         setAgentBalance(bal ?? 0);
         
         if (bal === null || bal < parseFloat(action.amount)) {
@@ -1724,8 +1745,11 @@ export default function App() {
           return;
         }
 
+        const activeSigner = sessionStore.getSigner(provider);
+        if (!activeSigner) return;
+
         const txHash = await executeGaslessTokenTransfer(
-          agentSigner,
+          activeSigner,
           action.to,
           action.amount,
           (step) => {
@@ -1748,7 +1772,7 @@ export default function App() {
           }
         ].slice(-10));
 
-        const newBal = await getTYIBalance(provider, agentWallet.address);
+        const newBal = await getTYIBalance(provider, agentWalletAddress);
         setAgentBalance(newBal ?? 0);
         collection.refresh(wallet.account);
       } catch (err) {
@@ -1761,16 +1785,19 @@ export default function App() {
     }, 25000);
 
     return () => clearInterval(interval);
-  }, [agentPreauthorized, agentWallet]);
+  }, [agentPreauthorized, agentWalletAddress, isTabVisible]);
 
   // Effect for automated subscription billing cycles
   useEffect(() => {
-    if (!subscriptionEnabled || !agentWallet) return;
+    if (!subscriptionEnabled || !agentWalletAddress) return;
 
     const provider = getProvider();
-    const agentSigner = new ethers.Wallet(agentWallet.privateKey, provider);
 
     const billingInterval = setInterval(async () => {
+      if (!isTabVisible) return;
+      const activeSigner = sessionStore.getSigner(provider);
+      if (!activeSigner) return;
+
       setSimActive(true);
       setSimStep(1);
       setSimSuccess(false);
@@ -1787,13 +1814,13 @@ export default function App() {
       addLog(`[Subscription Relayer] Debiting 0.05 TYI (scaled down for demo) from agent session wallet...`);
 
       try {
-        const bal = await getTYIBalance(provider, agentWallet.address);
+        const bal = await getTYIBalance(provider, agentWalletAddress);
         if (bal === null || bal < 0.05) {
           throw new Error("Pre-authorized Agent Wallet has insufficient balance to cover subscription renewal.");
         }
 
         const txHash = await executeGaslessTokenTransfer(
-          agentSigner,
+          activeSigner,
           CONTRACT_ADDRESS,
           "0.05",
           (step) => {
@@ -1817,7 +1844,7 @@ export default function App() {
         setSimStep(5);
         setSimActive(false);
 
-        const newBal = await getTYIBalance(provider, agentWallet.address);
+        const newBal = await getTYIBalance(provider, agentWalletAddress);
         setAgentBalance(newBal ?? 0);
         collection.refresh(wallet.account);
       } catch (err) {
@@ -1830,72 +1857,87 @@ export default function App() {
     }, 45000);
 
     return () => clearInterval(billingInterval);
-  }, [subscriptionEnabled, agentWallet]);
+  }, [subscriptionEnabled, agentWalletAddress, isTabVisible]);
 
   const handleDeactivateAgent = async () => {
     const provider = getProvider();
-    const bal = await getTYIBalance(provider, agentWallet.address);
+    const bal = await getTYIBalance(provider, agentWalletAddress);
     if (bal && bal > 0.01) {
-      const confirmRefund = window.confirm(`Deauthorizing AI Agent. Withdraw remaining ${bal.toFixed(4)} TYI back to your wallet gaslessly?`);
-      if (confirmRefund) {
-        setSimActive(true);
-        setSimStep(1);
-        setSimSuccess(false);
-        setSimTxHash("");
-        setSimError("");
-        
-        const logs = [];
-        const addLog = (msg) => {
-          logs.push({ time: new Date().toLocaleTimeString(), text: msg });
-          setSimLogs([...logs]);
-        };
-
-        addLog(`[Agent Session] Initiating refund of ${bal.toFixed(4)} TYI back to user wallet...`);
-        try {
-          const agentSigner = new ethers.Wallet(agentWallet.privateKey, provider);
-          const txHash = await executeGaslessTokenTransfer(
-            agentSigner,
-            wallet.account,
-            bal.toString(),
-            (step) => {
-              setSimStep(step);
-              if (step === 1) {
-                addLog(`[Step 1/4: Auth] Authenticating Agent Wallet...`);
-              } else if (step === 2) {
-                addLog(`[Step 2/4: Quote] Encoding transfer and requesting quote...`);
-              } else if (step === 3) {
-                addLog(`[Step 3/4: Settle] Signing settlement from Agent Wallet...`);
-              } else if (step === 4) {
-                addLog(`[Step 4/4: Execute] Broadcasting refund to Base Sepolia...`);
-              }
-            }
-          );
-
-          setSimTxHash(txHash);
-          addLog(`[Step 4/4: Execute] Refund transaction mined on-chain!`);
-          addLog(`[Tx Hash] ${txHash}`);
-          setSimSuccess(true);
-          setSimStep(5);
-          setSimActive(false);
-
-          setAgentPreauthorized(false);
-          setAgentWallet(null);
-          setAgentBalance(0);
-          collection.refresh(wallet.account);
-        } catch (err) {
-          console.error("Refund error:", err);
-          addLog(`[Agent Error] Refund failed: ${err.message || err}`);
-          setSimError(err.message || String(err));
-          setSimActive(false);
-          setSimStep(0);
-        }
-        return;
-      }
+      setDeactivateBalance(bal);
+      setShowDeactivateModal(true);
+    } else {
+      setAgentPreauthorized(false);
+      setAgentWalletAddress("");
+      setAgentBalance(0);
+      sessionStore.clear();
     }
+  };
+
+  const handleConfirmDeactivate = async (withdraw) => {
+    setShowDeactivateModal(false);
     
-    setAgentPreauthorized(false);
-    setAgentWallet(null);
-    setAgentBalance(0);
+    if (withdraw && deactivateBalance > 0.01) {
+      const provider = getProvider();
+      setSimActive(true);
+      setSimStep(1);
+      setSimSuccess(false);
+      setSimTxHash("");
+      setSimError("");
+      
+      const logs = [];
+      const addLog = (msg) => {
+        logs.push({ time: new Date().toLocaleTimeString(), text: msg });
+        setSimLogs([...logs]);
+      };
+
+      addLog(`[Agent Session] Initiating refund of ${deactivateBalance.toFixed(4)} TYI back to user wallet...`);
+      try {
+        const activeSigner = sessionStore.getSigner(provider);
+        if (!activeSigner) throw new Error("Agent session wallet not found");
+
+        const txHash = await executeGaslessTokenTransfer(
+          activeSigner,
+          wallet.account,
+          deactivateBalance.toString(),
+          (step) => {
+            setSimStep(step);
+            if (step === 1) {
+              addLog(`[Step 1/4: Auth] Authenticating Agent Wallet...`);
+            } else if (step === 2) {
+              addLog(`[Step 2/4: Quote] Encoding transfer and requesting quote...`);
+            } else if (step === 3) {
+              addLog(`[Step 3/4: Settle] Signing settlement from Agent Wallet...`);
+            } else if (step === 4) {
+              addLog(`[Step 4/4: Execute] Broadcasting refund to Base Sepolia...`);
+            }
+          }
+        );
+
+        setSimTxHash(txHash);
+        addLog(`[Step 4/4: Execute] Refund transaction mined on-chain!`);
+        addLog(`[Tx Hash] ${txHash}`);
+        setSimSuccess(true);
+        setSimStep(5);
+        setSimActive(false);
+
+        setAgentPreauthorized(false);
+        setAgentWalletAddress("");
+        setAgentBalance(0);
+        sessionStore.clear();
+        collection.refresh(wallet.account);
+      } catch (err) {
+        console.error("Refund error:", err);
+        addLog(`[Agent Error] Refund failed: ${err.message || err}`);
+        setSimError(err.message || String(err));
+        setSimActive(false);
+        setSimStep(0);
+      }
+    } else {
+      setAgentPreauthorized(false);
+      setAgentWalletAddress("");
+      setAgentBalance(0);
+      sessionStore.clear();
+    }
   };
 
   const handleOpenAgentModal = (action = "agent") => {
@@ -1907,12 +1949,9 @@ export default function App() {
     setFundingStep(0);
     
     const provider = getProvider();
-    if (!agentWallet) {
-      const newWallet = ethers.Wallet.createRandom(provider);
-      setAgentWallet({
-        address: newWallet.address,
-        privateKey: newWallet.privateKey
-      });
+    if (!sessionStore.isActive()) {
+      const addr = sessionStore.create(provider);
+      setAgentWalletAddress(addr);
     }
     
     setShowAgentModal(true);
@@ -1934,24 +1973,20 @@ export default function App() {
     addLog(`[Agent Session] Generating ephemeral Agent keypair...`);
     const provider = getProvider();
     
-    let targetWallet = agentWallet;
-    if (!targetWallet) {
-      const newWallet = ethers.Wallet.createRandom(provider);
-      targetWallet = {
-        address: newWallet.address,
-        privateKey: newWallet.privateKey
-      };
-      setAgentWallet(targetWallet);
+    let targetAddress = agentWalletAddress;
+    if (!targetAddress) {
+      targetAddress = sessionStore.create(provider);
+      setAgentWalletAddress(targetAddress);
     }
     
-    addLog(`[Agent Session] Initializing UGF authorization transfer to agent address: ${targetWallet.address}...`);
+    addLog(`[Agent Session] Initializing UGF authorization transfer to agent address: ${targetAddress}...`);
 
     try {
       const signer = await provider.getSigner();
       
       const txHash = await executeGaslessTokenTransfer(
         signer,
-        targetWallet.address,
+        targetAddress,
         amount,
         (step) => {
           setFundingStep(step);
@@ -2147,10 +2182,15 @@ export default function App() {
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const hash = await executeGaslessClaim(signer, setActiveStep);
+      
+      let badgeType = 0;
+      if (badge.id === "builder") badgeType = 1;
+      else if (badge.id === "pioneer") badgeType = 2;
+
+      const hash = await executeGaslessClaim(signer, badgeType, setActiveStep);
       setTxHash(hash);
       setActiveStep(5);
-      await collection.refresh();
+      await collection.refresh(wallet.account);
     } catch (err) {
       const msg = err?.message ?? String(err);
       const mapped =
@@ -2228,7 +2268,7 @@ export default function App() {
           setAgentPreauthorized={setAgentPreauthorized}
           agentLogs={agentLogs}
           
-          agentWallet={agentWallet}
+          agentWalletAddress={agentWalletAddress}
           agentBalance={agentBalance}
           handleOpenAgentModal={handleOpenAgentModal}
           handleDeactivateAgent={handleDeactivateAgent}
@@ -2265,7 +2305,14 @@ export default function App() {
         fundingTxHash={fundingTxHash}
         fundingError={fundingError}
         setFundingError={setFundingError}
-        agentWalletAddress={agentWallet ? agentWallet.address : ""}
+        agentWalletAddress={agentWalletAddress}
+      />
+
+      <DeactivateConfirmModal
+        isOpen={showDeactivateModal}
+        onClose={() => setShowDeactivateModal(false)}
+        balance={deactivateBalance}
+        onConfirm={handleConfirmDeactivate}
       />
     </div>
   );
@@ -2410,14 +2457,86 @@ function AgentSessionModal({
                 </a>
               </div>
 
-              <button
-                onClick={onClose}
-                className="w-full rounded-xl py-2.5 text-xs font-semibold border border-white/10 bg-white/5 text-white hover:bg-white/10 transition-all mt-4"
-              >
-                Start Autonomous Agent
-              </button>
             </div>
           )}
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}
+
+function DeactivateConfirmModal({
+  isOpen,
+  onClose,
+  balance,
+  onConfirm,
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.3 }}
+          className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-black/90 p-6 shadow-2xl"
+          style={{ background: "var(--gradient-card)" }}
+        >
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.08),transparent_70%)]" />
+
+          {/* Header */}
+          <div className="relative z-10 flex items-center justify-between border-b border-white/5 pb-4 mb-5">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-red-400" />
+              <h3 className="font-heading text-base font-bold text-white">Confirm Deauthorization</h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-muted-foreground hover:text-white transition-colors text-base"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="relative z-10 space-y-4">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              You are deauthorizing the active AI Agent session. This will suspend autonomous yield rebalancing and recurring subscription renewals.
+            </p>
+
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Agent Address:</span>
+                <span className="font-mono text-white text-[11px]">Active Session</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Remaining Balance:</span>
+                <span className="text-emerald-400 font-bold">{balance.toFixed(4)} TYI</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                onClick={() => onConfirm(true)}
+                className="w-full rounded-xl py-2.5 text-xs font-bold bg-white text-black hover:bg-white/90 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] transition-all cursor-pointer font-sans"
+              >
+                Withdraw Balance & Deauthorize
+              </button>
+              <button
+                onClick={() => onConfirm(false)}
+                className="w-full rounded-xl py-2.5 text-xs font-semibold border border-red-500/20 bg-red-950/10 text-red-400 hover:bg-red-950/20 transition-all cursor-pointer font-sans"
+              >
+                Deauthorize Without Refund
+              </button>
+              <button
+                onClick={onClose}
+                className="w-full rounded-xl py-2.5 text-xs font-medium border border-white/5 bg-white/5 text-slate-300 hover:bg-white/10 transition-all cursor-pointer font-sans"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </motion.div>
       </div>
     </AnimatePresence>

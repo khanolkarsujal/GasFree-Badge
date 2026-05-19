@@ -4,10 +4,11 @@ import { UGFClient, UGFError } from '@tychilabs/ugf-testnet-js';
 
 // Contract interface
 const CONTRACT_ABI = [
-  'function claimBadge(address recipient) external returns (uint256)',
+  'function claimBadge(address recipient, uint8 badgeType) external returns (uint256)',
   'function totalMinted() external view returns (uint256)',
   'function remaining() external view returns (uint256)',
-  'event BadgeClaimed(address indexed recipient, uint256 indexed tokenId)',
+  'function getBadgeType(uint256 tokenId) external view returns (uint8)',
+  'event BadgeClaimed(address indexed recipient, uint256 indexed tokenId, uint8 indexed badgeType)',
 ];
 
 // TYI_MOCK_USD on Base Sepolia (from UGF registry)
@@ -45,9 +46,11 @@ export async function getClaimedBadges(provider, address) {
   try {
     const c = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
     const filter = c.filters.BadgeClaimed(address);
+    // Limit range to prevent massive RPC fetch overhead
     const events = await c.queryFilter(filter, 0, 'latest');
     return events.map(e => ({
       tokenId: Number(e.args.tokenId),
+      badgeType: Number(e.args.badgeType),
       txHash:  e.transactionHash,
       block:   e.blockNumber,
     }));
@@ -65,13 +68,14 @@ export async function getClaimedBadges(provider, address) {
  *  1. Auth    — EIP-191 wallet sign → JWT
  *  2. Quote   — tx calldata → digest + TYI settlement amount
  *  3. Settle  — ERC-3009 TYI_MOCK_USD signature (no ETH from user)
- *  4. Execute — UGF sponsors gas, claimBadge(recipient) lands on-chain
+ *  4. Execute — UGF sponsors gas, claimBadge(recipient, badgeType) lands on-chain
  *
- * @param {ethers.Signer} signer   Connected signer (Base Sepolia required)
- * @param {Function}      onStep   Progress callback: receives 1-4
- * @returns {Promise<string>}      Confirmed on-chain tx hash
+ * @param {ethers.Signer} signer    Connected signer (Base Sepolia required)
+ * @param {number}        badgeType The badge type ID (0 = Explorer, 1 = Builder, 2 = Pioneer)
+ * @param {Function}      onStep    Progress callback: receives 1-4
+ * @returns {Promise<string>}       Confirmed on-chain tx hash
  */
-export async function executeGaslessClaim(signer, onStep = () => {}) {
+export async function executeGaslessClaim(signer, badgeType, onStep = () => {}) {
   const client       = new UGFClient();
   const payerAddress = await signer.getAddress();
 
@@ -83,10 +87,10 @@ export async function executeGaslessClaim(signer, onStep = () => {}) {
     throw new Error(`Authentication failed: ${_msg(err)}`);
   }
 
-  // ── 2. Quote — encode claimBadge(recipient) ──────────────────────────────────
+  // ── 2. Quote — encode claimBadge(recipient, badgeType) ──────────────────────
   onStep(2);
   const iface = new ethers.Interface(CONTRACT_ABI);
-  const data  = iface.encodeFunctionData('claimBadge', [payerAddress]);
+  const data  = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
   let quote;
   try {
     quote = await client.quote.get({

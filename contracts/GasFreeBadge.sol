@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -13,12 +12,12 @@ import "@openzeppelin/contracts/utils/Strings.sol";
  *         Users claim badges via UGF — zero ETH required in their wallet.
  *
  * @dev UGF Integration:
- *      - UGF relayer calls claimBadge(recipient) on behalf of the user
+ *      - UGF relayer calls claimBadge(recipient, badgeType) on behalf of the user
  *      - The recipient address (user's wallet) is encoded in the calldata
  *      - The NFT is minted directly to the user
  *      - No per-wallet restrictions — UGF handles spam prevention via Mock USD cost
  */
-contract GasFreeBadge is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
+contract GasFreeBadge is ERC721, Ownable, ReentrancyGuard {
     using Strings for uint256;
 
     // ─── Collection config ────────────────────────────────────────────────────
@@ -29,14 +28,18 @@ contract GasFreeBadge is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
     string  private _baseTokenURI;
     bool    public  paused;
 
+    // Token ID -> Badge Type (0 = Explorer, 1 = Builder, 2 = Pioneer)
+    mapping(uint256 => uint8) public tokenBadgeType;
+
     // ─── Events ───────────────────────────────────────────────────────────────
-    event BadgeClaimed(address indexed recipient, uint256 indexed tokenId);
+    event BadgeClaimed(address indexed recipient, uint256 indexed tokenId, uint8 indexed badgeType);
     event Paused(bool status);
 
     // ─── Errors ───────────────────────────────────────────────────────────────
     error MaxSupplyReached();
     error ZeroAddress();
     error ContractPaused();
+    error InvalidBadgeType();
 
     // ─── Constructor ──────────────────────────────────────────────────────────
     constructor(
@@ -51,31 +54,40 @@ contract GasFreeBadge is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
 
     // ─── Core Gasless Claim (UGF-native) ─────────────────────────────────────
     /**
-     * @notice Mint a badge to `recipient`.
+     * @notice Mint a badge to `recipient` with a specific `badgeType`.
      * @dev    Called by UGF relayer on behalf of the user.
      *         The recipient address is the actual user wallet.
      *         No per-wallet limit — UGF's Mock USD cost prevents spam.
      * @param  recipient  The wallet that receives the NFT.
+     * @param  badgeType  The type of badge (0 = Explorer, 1 = Builder, 2 = Pioneer).
      * @return tokenId    The minted token ID.
      */
-    function claimBadge(address recipient)
+    function claimBadge(address recipient, uint8 badgeType)
         external
         nonReentrant
         returns (uint256)
     {
         if (paused)                          revert ContractPaused();
         if (recipient == address(0))         revert ZeroAddress();
+        if (badgeType > 2)                   revert InvalidBadgeType();
         if (_nextTokenId >= MAX_SUPPLY)      revert MaxSupplyReached();
 
         uint256 tokenId = _nextTokenId++;
+        tokenBadgeType[tokenId] = badgeType;
         _safeMint(recipient, tokenId);
-        emit BadgeClaimed(recipient, tokenId);
+        emit BadgeClaimed(recipient, tokenId, badgeType);
         return tokenId;
     }
 
     // ─── View helpers ─────────────────────────────────────────────────────────
     function totalMinted() external view returns (uint256) {
         return _nextTokenId;
+    }
+
+    // Returns the badge type of a token
+    function getBadgeType(uint256 tokenId) external view returns (uint8) {
+        _requireOwned(tokenId);
+        return tokenBadgeType[tokenId];
     }
 
     function remaining() external view returns (uint256) {
@@ -98,14 +110,12 @@ contract GasFreeBadge is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
     }
 
     function tokenURI(uint256 tokenId)
-        public view override(ERC721, ERC721URIStorage) returns (string memory)
+        public view override returns (string memory)
     {
-        return super.tokenURI(tokenId);
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public view override(ERC721, ERC721URIStorage) returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
+        _requireOwned(tokenId);
+        string memory base = _baseURI();
+        return bytes(base).length > 0
+            ? string(abi.encodePacked(base, uint256(tokenBadgeType[tokenId]).toString(), ".json"))
+            : "";
     }
 }
