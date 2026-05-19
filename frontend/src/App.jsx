@@ -32,7 +32,7 @@ import {
 
 import { useWallet } from "@/hooks/useWallet";
 import { useCollection } from "@/hooks/useCollection";
-import { executeGaslessClaim, executeGaslessTokenTransfer } from "@/services/ugfService";
+import { executeGaslessClaim, executeGaslessTokenTransfer, getTYIBalance } from "@/services/ugfService";
 import { BADGES } from "@/lib/constants";
 import { CONTRACT_ADDRESS } from "@/contractConfig";
 import { ClaimModal } from "@/components";
@@ -40,7 +40,7 @@ import { basescanAddress, copyToClipboard } from "@/lib/utils";
 
 const isDeployed = CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000";
 
-function Nav({ wallet }) {
+function Nav({ wallet, collection }) {
   return (
     <header className="relative z-20 border-b border-white/5">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
@@ -68,26 +68,36 @@ function Nav({ wallet }) {
             UGF Docs
           </a>
         </nav>
-        <button
-          onClick={
-            !wallet.account
-              ? wallet.connect
+        <div className="flex items-center gap-3">
+          {wallet.account && wallet.isRightChain && collection && (
+            <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs text-white">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <span className="font-semibold text-white/90">
+                {collection.tyiBalance !== null ? `${collection.tyiBalance.toFixed(2)} TYI` : "0.00 TYI"}
+              </span>
+            </div>
+          )}
+          <button
+            onClick={
+              !wallet.account
+                ? wallet.connect
+                : !wallet.isRightChain
+                ? wallet.switchToBaseSepolia
+                : undefined
+            }
+            className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all hover:shadow-[0_0_24px_-4px_rgba(255,255,255,0.4)] ${
+              wallet.account && !wallet.isRightChain
+                ? "bg-amber-500 hover:bg-amber-400 text-black cursor-pointer font-bold"
+                : "bg-white hover:bg-white/90 text-black"
+            }`}
+          >
+            {!wallet.account
+              ? "Connect Wallet"
               : !wallet.isRightChain
-              ? wallet.switchToBaseSepolia
-              : undefined
-          }
-          className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all hover:shadow-[0_0_24px_-4px_rgba(255,255,255,0.4)] ${
-            wallet.account && !wallet.isRightChain
-              ? "bg-amber-500 hover:bg-amber-400 text-black cursor-pointer font-bold"
-              : "bg-white hover:bg-white/90 text-black"
-          }`}
-        >
-          {!wallet.account
-            ? "Connect Wallet"
-            : !wallet.isRightChain
-            ? "Switch Network"
-            : `${wallet.account.slice(0, 6)}...${wallet.account.slice(-4)}`}
-        </button>
+              ? "Switch Network"
+              : `${wallet.account.slice(0, 6)}...${wallet.account.slice(-4)}`}
+          </button>
+        </div>
       </div>
     </header>
   );
@@ -268,7 +278,47 @@ function PaymentsPlayground({
   setSubscriptionEnabled,
   runSimulation,
   simActive,
+  wallet,
+  agentWallet,
+  agentBalance,
+  handleOpenAgentModal,
+  ensureWalletConnected,
 }) {
+  const handleDonate = async () => {
+    if (!(await ensureWalletConnected())) return;
+    runSimulation("Donation", `${donationAmount} TYI`);
+  };
+
+  const handleCheckout = async () => {
+    if (!(await ensureWalletConnected())) return;
+    runSimulation("Checkout", "$15.00 Mock USD");
+  };
+
+  const handleToggleSubscription = async () => {
+    if (!(await ensureWalletConnected())) return;
+    if (subscriptionEnabled) {
+      setSubscriptionEnabled(false);
+    } else {
+      if (!agentWallet) {
+        handleOpenAgentModal("subscription");
+      } else {
+        await runSimulation("Subscription Permit", "$9.99/mo");
+        setSubscriptionEnabled(true);
+      }
+    }
+  };
+
+  let donateBtnText = `Donate ${donationAmount || 0} TYI Gaslessly`;
+  if (!wallet.account) donateBtnText = "Connect Wallet";
+  else if (!wallet.isRightChain) donateBtnText = "Switch to Base Sepolia";
+  else if (simActive) donateBtnText = "Executing Transaction...";
+
+  let checkoutBtnText = "Complete Gasless Checkout";
+  if (paymentCompleted) checkoutBtnText = "License Purchased!";
+  else if (!wallet.account) checkoutBtnText = "Connect Wallet";
+  else if (!wallet.isRightChain) checkoutBtnText = "Switch to Base Sepolia";
+  else if (simActive) checkoutBtnText = "Checking out...";
+
   return (
     <div>
       <div className="mb-8">
@@ -322,10 +372,10 @@ function PaymentsPlayground({
           
           <button
             disabled={simActive || !donationAmount}
-            onClick={() => runSimulation("Donation", `${donationAmount} TYI`)}
+            onClick={handleDonate}
             className="mt-6 w-full rounded-xl py-2.5 text-xs font-semibold bg-white text-black hover:bg-white/90 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {simActive ? "Executing Transaction..." : `Donate ${donationAmount || 0} TYI Gaslessly`}
+            {donateBtnText}
           </button>
         </div>
 
@@ -358,15 +408,15 @@ function PaymentsPlayground({
           </div>
           
           <button
-            disabled={simActive}
-            onClick={() => runSimulation("Checkout", "$15.00 Mock USD")}
+            disabled={simActive || paymentCompleted}
+            onClick={handleCheckout}
             className={`mt-6 w-full rounded-xl py-2.5 text-xs font-semibold transition-all duration-200 ${
               paymentCompleted
                 ? "bg-emerald-950/20 border border-emerald-500/20 text-emerald-400 cursor-default"
                 : "bg-white text-black hover:bg-white/90 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer"
             }`}
           >
-            {paymentCompleted ? "License Purchased!" : simActive ? "Checking out..." : "Complete Gasless Checkout"}
+            {checkoutBtnText}
           </button>
         </div>
 
@@ -389,14 +439,7 @@ function PaymentsPlayground({
               </div>
               <button
                 disabled={simActive}
-                onClick={async () => {
-                  if (subscriptionEnabled) {
-                    setSubscriptionEnabled(false);
-                  } else {
-                    await runSimulation("Subscription Permit", "$9.99/mo");
-                    setSubscriptionEnabled(true);
-                  }
-                }}
+                onClick={handleToggleSubscription}
                 className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 relative focus:outline-none ${
                   subscriptionEnabled ? "bg-emerald-500" : "bg-white/10"
                 }`}
@@ -411,9 +454,9 @@ function PaymentsPlayground({
             
             <div className="mt-4 text-[10px] text-muted-foreground text-center">
               {subscriptionEnabled ? (
-                <span className="text-emerald-400 font-semibold">✓ Gasless Auto-Billing Pre-Authorized</span>
+                <span className="text-emerald-400 font-semibold">✓ Gasless Auto-Billing Active (Debits Session Wallet)</span>
               ) : (
-                "Authorize gasless auto-debit permit"
+                "Authorize recurring debit via Session Wallet"
               )}
             </div>
           </div>
@@ -440,7 +483,42 @@ function AgenticPlayground({
   agentLogs,
   runSimulation,
   simActive,
+  wallet,
+  agentWallet,
+  agentBalance,
+  handleOpenAgentModal,
+  handleDeactivateAgent,
+  ensureWalletConnected,
 }) {
+  const handleSendTokens = async () => {
+    if (!(await ensureWalletConnected())) return;
+    runSimulation("Transfer", `${transferAmount} TYI to ${transferRecipient.slice(0, 6)}...`);
+  };
+
+  const handleClaimRewards = async () => {
+    if (!(await ensureWalletConnected())) return;
+    runSimulation("Reward Claim", "100 XP Rewards");
+  };
+
+  const handleToggleAgent = async () => {
+    if (!(await ensureWalletConnected())) return;
+    if (agentPreauthorized) {
+      await handleDeactivateAgent();
+    } else {
+      handleOpenAgentModal("agent");
+    }
+  };
+
+  let sendBtnText = "Send Tokens Gaslessly";
+  if (!wallet.account) sendBtnText = "Connect Wallet";
+  else if (!wallet.isRightChain) sendBtnText = "Switch Network";
+  else if (simActive) sendBtnText = "Sending...";
+
+  let claimBtnText = "Claim 100 XP Gaslessly";
+  if (!wallet.account) claimBtnText = "Connect Wallet";
+  else if (!wallet.isRightChain) claimBtnText = "Switch Network";
+  else if (simActive) claimBtnText = "Claiming...";
+
   return (
     <div>
       <div className="mb-8">
@@ -492,10 +570,10 @@ function AgenticPlayground({
           
           <button
             disabled={simActive || !transferRecipient || !transferAmount}
-            onClick={() => runSimulation("Transfer", `${transferAmount} TYI to ${transferRecipient.slice(0, 6)}...`)}
+            onClick={handleSendTokens}
             className="mt-6 w-full rounded-xl py-2.5 text-xs font-semibold bg-white text-black hover:bg-white/90 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {simActive ? "Sending..." : "Send Tokens Gaslessly"}
+            {sendBtnText}
           </button>
         </div>
 
@@ -520,10 +598,10 @@ function AgenticPlayground({
           
           <button
             disabled={simActive}
-            onClick={() => runSimulation("Reward Claim", "100 XP Rewards")}
+            onClick={handleClaimRewards}
             className="mt-6 w-full rounded-xl py-2.5 text-xs font-semibold bg-white text-black hover:bg-white/90 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all cursor-pointer disabled:opacity-50"
           >
-            {simActive ? "Claiming..." : "Claim 100 XP Gaslessly"}
+            {claimBtnText}
           </button>
         </div>
 
@@ -546,14 +624,7 @@ function AgenticPlayground({
               </div>
               <button
                 disabled={simActive}
-                onClick={async () => {
-                  if (agentPreauthorized) {
-                    setAgentPreauthorized(false);
-                  } else {
-                    await runSimulation("Agent Pre-Authorization", "50 TYI Daily Cap");
-                    setAgentPreauthorized(true);
-                  }
-                }}
+                onClick={handleToggleAgent}
                 className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 relative focus:outline-none ${
                   agentPreauthorized ? "bg-[oklch(0.75_0.18_295)]" : "bg-white/10"
                 }`}
@@ -565,6 +636,29 @@ function AgenticPlayground({
                 />
               </button>
             </div>
+
+            {agentPreauthorized && agentWallet && (
+              <div className="mt-4 p-3 rounded-xl border border-white/5 bg-black/40 space-y-1.5 text-[10px] font-mono">
+                <div className="flex justify-between items-center text-white/50">
+                  <span>Agent Address:</span>
+                  <span className="text-white select-all">{agentWallet.address.slice(0, 8)}...{agentWallet.address.slice(-6)}</span>
+                </div>
+                <div className="flex justify-between items-center text-white/50">
+                  <span>Agent Balance:</span>
+                  <span className="text-emerald-400 font-bold">{agentBalance.toFixed(4)} TYI</span>
+                </div>
+                <div className="flex justify-between items-center text-white/50">
+                  <span>Relay Gas Fee:</span>
+                  <span className="text-emerald-400">0.00 ETH (UGF Sponsored)</span>
+                </div>
+                <button
+                  onClick={() => handleOpenAgentModal("agent")}
+                  className="w-full mt-2 py-1.5 rounded bg-white/5 text-white hover:bg-white/10 border border-white/5 text-[9px] font-sans font-bold transition-all"
+                >
+                  Add Authorization Funds
+                </button>
+              </div>
+            )}
           </div>
           
           <div className="mt-6 text-[11px] border border-white/5 rounded-xl px-3 py-2 bg-black/20 text-muted-foreground flex justify-between items-center leading-none">
@@ -588,9 +682,19 @@ function AgenticPlayground({
           </div>
           <div className="space-y-1.5 max-h-[140px] overflow-y-auto custom-scrollbar text-white/70">
             {agentLogs.map((log, i) => (
-              <div key={i} className="flex gap-2.5">
+              <div key={i} className="flex flex-wrap gap-x-2.5 items-center">
                 <span className="text-indigo-400 font-semibold">[{log.time}]</span>
                 <span>{log.text}</span>
+                {log.txHash && (
+                  <a
+                    href={`https://sepolia.basescan.org/tx/${log.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[oklch(0.75_0.18_295)] hover:underline flex items-center gap-0.5 font-semibold ml-1"
+                  >
+                    Basescan <ExternalLink className="h-3 w-3 inline" />
+                  </a>
+                )}
               </div>
             ))}
           </div>
@@ -851,6 +955,12 @@ function UGFPlaygroundsSection({
   agentPreauthorized,
   setAgentPreauthorized,
   agentLogs,
+  // Agentic additions
+  agentWallet,
+  agentBalance,
+  handleOpenAgentModal,
+  handleDeactivateAgent,
+  ensureWalletConnected,
 }) {
   return (
     <section id="catalog" className="mx-auto max-w-7xl px-6 py-16 border-t border-white/5 scroll-mt-20">
@@ -1021,6 +1131,11 @@ function UGFPlaygroundsSection({
               setSubscriptionEnabled={setSubscriptionEnabled}
               runSimulation={runSimulation}
               simActive={simActive}
+              wallet={wallet}
+              agentWallet={agentWallet}
+              agentBalance={agentBalance}
+              handleOpenAgentModal={handleOpenAgentModal}
+              ensureWalletConnected={ensureWalletConnected}
             />
           )}
 
@@ -1035,6 +1150,12 @@ function UGFPlaygroundsSection({
               agentLogs={agentLogs}
               runSimulation={runSimulation}
               simActive={simActive}
+              wallet={wallet}
+              agentWallet={agentWallet}
+              agentBalance={agentBalance}
+              handleOpenAgentModal={handleOpenAgentModal}
+              handleDeactivateAgent={handleDeactivateAgent}
+              ensureWalletConnected={ensureWalletConnected}
             />
           )}
         </motion.div>
@@ -1490,46 +1611,393 @@ export default function App() {
   const [agentPreauthorized, setAgentPreauthorized] = useState(false);
   const [agentLogs, setAgentLogs] = useState([]);
 
+  // Ephemeral Agent Session states
+  const [agentWallet, setAgentWallet] = useState(null);
+  const [agentBalance, setAgentBalance] = useState(0);
+  const [showAgentModal, setShowAgentModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(""); // "agent" or "subscription"
+
+  // Modal funding states
+  const [isFundingAgent, setIsFundingAgent] = useState(false);
+  const [fundingStep, setFundingStep] = useState(0);
+  const [fundingLogs, setFundingLogs] = useState([]);
+  const [fundingSuccess, setFundingSuccess] = useState(false);
+  const [fundingTxHash, setFundingTxHash] = useState("");
+  const [fundingError, setFundingError] = useState("");
+
+  const getProvider = () => {
+    if (typeof window !== "undefined" && window.ethereum) {
+      return new ethers.BrowserProvider(window.ethereum);
+    }
+    return new ethers.JsonRpcProvider("https://sepolia.base.org");
+  };
+
+  const ensureWalletConnected = async () => {
+    if (!wallet.account) {
+      await wallet.connect();
+      return false;
+    }
+    if (!wallet.isRightChain) {
+      await wallet.switchToBaseSepolia();
+      return false;
+    }
+    return true;
+  };
+
   useEffect(() => {
     collection.refresh(wallet.account);
     const id = setInterval(() => collection.refresh(wallet.account), 30_000);
     return () => clearInterval(id);
   }, [wallet.account]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Effect for rolling autonomous AI agent simulation logs
+  // Effect for rolling autonomous AI agent real transactions
   useEffect(() => {
-    if (!agentPreauthorized) {
+    if (!agentPreauthorized || !agentWallet) {
       setAgentLogs([]);
       return;
     }
-    
+
+    const provider = getProvider();
+    const agentSigner = new ethers.Wallet(agentWallet.privateKey, provider);
+
     const initialLogs = [
-      { time: new Date().toLocaleTimeString(), text: "[Agent] Autonomous yield routing agent initialized." },
-      { time: new Date().toLocaleTimeString(), text: "[Agent] Pre-authorized daily gas quota: 50 TYI." }
+      { time: new Date().toLocaleTimeString(), text: `[Agent] Autonomous agent initialized. Address: ${agentWallet.address.slice(0, 6)}...${agentWallet.address.slice(-4)}` },
+      { time: new Date().toLocaleTimeString(), text: "[Agent] Pre-authorized session active. Checking balance..." }
     ];
     setAgentLogs(initialLogs);
-    
-    const actions = [
-      "Analyzing liquidity pools in Base Sepolia...",
-      "Sensed 0.4% price arbitrage on Uniswap vs Sushiswap...",
-      "Executing gasless arbitrage trade... Sponsored 0 ETH gas!",
-      "Harvested yield: +0.85 Mock USD. Trade completed.",
-      "Scanning Aave lending market for stablecoin rate optimization...",
-      "Rebalancing collateral from USDC to DAI gaslessly (UGF Session Active)...",
-      "Yield reallocated. Portfolio value updated (+1.45 Mock USD)."
-    ];
-    
-    let counter = 0;
-    const interval = setInterval(() => {
+
+    getTYIBalance(provider, agentWallet.address).then(bal => {
+      setAgentBalance(bal ?? 0);
       setAgentLogs(prev => [
         ...prev,
-        { time: new Date().toLocaleTimeString(), text: `[Agent] ${actions[counter % actions.length]}` }
-      ].slice(-8)); // keep last 8 logs
+        { time: new Date().toLocaleTimeString(), text: `[Agent] Current balance: ${bal !== null ? bal.toFixed(4) : "0"} TYI.` }
+      ]);
+    });
+
+    const agentActions = [
+      {
+        desc: "DeFi Yield Router rebalance",
+        amount: "0.02",
+        to: CONTRACT_ADDRESS,
+        logStart: "Scanning Base Sepolia yield vaults...",
+        logPreTx: "Yield opportunity found! Routing 0.02 TYI to GasFreeBadge Vault...",
+        logSuccess: "Yield routed successfully! Harvested rewards on-chain."
+      },
+      {
+        desc: "Arbitrage Execution",
+        amount: "0.01",
+        to: CONTRACT_ADDRESS,
+        logStart: "Sensed 0.5% price discrepancy on mock Uniswap pair...",
+        logPreTx: "Executing gasless arbitrage trade for 0.01 TYI...",
+        logSuccess: "Arbitrage completed. Captured +0.03 TYI on-chain yield."
+      },
+      {
+        desc: "Liquidity Re-allocation",
+        amount: "0.03",
+        to: CONTRACT_ADDRESS,
+        logStart: "Analyzing stablecoin lending pool rates on Base Sepolia...",
+        logPreTx: "Re-allocating 0.03 TYI to high-yield pool...",
+        logSuccess: "Collateral optimized. Yield generation active."
+      }
+    ];
+
+    let counter = 0;
+    const interval = setInterval(async () => {
+      const action = agentActions[counter % agentActions.length];
       counter++;
-    }, 5000);
-    
+
+      setAgentLogs(prev => [
+        ...prev,
+        { time: new Date().toLocaleTimeString(), text: `[Agent] ${action.logStart}` },
+        { time: new Date().toLocaleTimeString(), text: `[Agent] ${action.logPreTx}` }
+      ].slice(-10));
+
+      try {
+        const bal = await getTYIBalance(provider, agentWallet.address);
+        setAgentBalance(bal ?? 0);
+        
+        if (bal === null || bal < parseFloat(action.amount)) {
+          setAgentLogs(prev => [
+            ...prev,
+            { time: new Date().toLocaleTimeString(), text: `[Agent Error] Insufficient balance (${bal !== null ? bal.toFixed(4) : "0"} TYI). Please fund the agent.` }
+          ].slice(-10));
+          return;
+        }
+
+        const txHash = await executeGaslessTokenTransfer(
+          agentSigner,
+          action.to,
+          action.amount,
+          (step) => {
+            if (step === 1) {
+              setAgentLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), text: `[Agent] Auth: Signing EIP-191 session...` }].slice(-10));
+            } else if (step === 3) {
+              setAgentLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), text: `[Agent] Settle: Signing ERC-3009 transfer...` }].slice(-10));
+            } else if (step === 4) {
+              setAgentLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), text: `[Agent] Execute: Submitting to Base Sepolia...` }].slice(-10));
+            }
+          }
+        );
+
+        setAgentLogs(prev => [
+          ...prev,
+          { 
+            time: new Date().toLocaleTimeString(), 
+            text: `[Agent Success] ${action.logSuccess} Tx: ${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
+            txHash
+          }
+        ].slice(-10));
+
+        const newBal = await getTYIBalance(provider, agentWallet.address);
+        setAgentBalance(newBal ?? 0);
+        collection.refresh(wallet.account);
+      } catch (err) {
+        console.error("Agent automation error:", err);
+        setAgentLogs(prev => [
+          ...prev,
+          { time: new Date().toLocaleTimeString(), text: `[Agent Error] Failed execution: ${err.message || err}` }
+        ].slice(-10));
+      }
+    }, 25000);
+
     return () => clearInterval(interval);
-  }, [agentPreauthorized]);
+  }, [agentPreauthorized, agentWallet]);
+
+  // Effect for automated subscription billing cycles
+  useEffect(() => {
+    if (!subscriptionEnabled || !agentWallet) return;
+
+    const provider = getProvider();
+    const agentSigner = new ethers.Wallet(agentWallet.privateKey, provider);
+
+    const billingInterval = setInterval(async () => {
+      setSimActive(true);
+      setSimStep(1);
+      setSimSuccess(false);
+      setSimTxHash("");
+      setSimError("");
+      
+      const logs = [];
+      const addLog = (msg) => {
+        logs.push({ time: new Date().toLocaleTimeString(), text: msg });
+        setSimLogs([...logs]);
+      };
+
+      addLog(`[Subscription Relayer] Automated renewal cycle triggered for API Hub Plan ($9.99/mo)...`);
+      addLog(`[Subscription Relayer] Debiting 0.05 TYI (scaled down for demo) from agent session wallet...`);
+
+      try {
+        const bal = await getTYIBalance(provider, agentWallet.address);
+        if (bal === null || bal < 0.05) {
+          throw new Error("Pre-authorized Agent Wallet has insufficient balance to cover subscription renewal.");
+        }
+
+        const txHash = await executeGaslessTokenTransfer(
+          agentSigner,
+          CONTRACT_ADDRESS,
+          "0.05",
+          (step) => {
+            setSimStep(step);
+            if (step === 1) {
+              addLog(`[Step 1/4: Auth] Authenticating Agent Wallet session...`);
+            } else if (step === 2) {
+              addLog(`[Step 2/4: Quote] Encoding transfer and requesting oracle gas quote...`);
+            } else if (step === 3) {
+              addLog(`[Step 3/4: Settle] Signing ERC-3009 settlement from Agent Wallet...`);
+            } else if (step === 4) {
+              addLog(`[Step 4/4: Execute] Broad-casting tx to Base Sepolia node...`);
+            }
+          }
+        );
+
+        setSimTxHash(txHash);
+        addLog(`[Step 4/4: Execute] Subscription renewal charge successfully mined on-chain!`);
+        addLog(`[Tx Hash] ${txHash}`);
+        setSimSuccess(true);
+        setSimStep(5);
+        setSimActive(false);
+
+        const newBal = await getTYIBalance(provider, agentWallet.address);
+        setAgentBalance(newBal ?? 0);
+        collection.refresh(wallet.account);
+      } catch (err) {
+        console.error("Subscription renewal error:", err);
+        addLog(`[Subscription Error] Renewal charge failed: ${err.message || err}`);
+        setSimError(err.message || String(err));
+        setSimActive(false);
+        setSimStep(0);
+      }
+    }, 45000);
+
+    return () => clearInterval(billingInterval);
+  }, [subscriptionEnabled, agentWallet]);
+
+  const handleDeactivateAgent = async () => {
+    const provider = getProvider();
+    const bal = await getTYIBalance(provider, agentWallet.address);
+    if (bal && bal > 0.01) {
+      const confirmRefund = window.confirm(`Deauthorizing AI Agent. Withdraw remaining ${bal.toFixed(4)} TYI back to your wallet gaslessly?`);
+      if (confirmRefund) {
+        setSimActive(true);
+        setSimStep(1);
+        setSimSuccess(false);
+        setSimTxHash("");
+        setSimError("");
+        
+        const logs = [];
+        const addLog = (msg) => {
+          logs.push({ time: new Date().toLocaleTimeString(), text: msg });
+          setSimLogs([...logs]);
+        };
+
+        addLog(`[Agent Session] Initiating refund of ${bal.toFixed(4)} TYI back to user wallet...`);
+        try {
+          const agentSigner = new ethers.Wallet(agentWallet.privateKey, provider);
+          const txHash = await executeGaslessTokenTransfer(
+            agentSigner,
+            wallet.account,
+            bal.toString(),
+            (step) => {
+              setSimStep(step);
+              if (step === 1) {
+                addLog(`[Step 1/4: Auth] Authenticating Agent Wallet...`);
+              } else if (step === 2) {
+                addLog(`[Step 2/4: Quote] Encoding transfer and requesting quote...`);
+              } else if (step === 3) {
+                addLog(`[Step 3/4: Settle] Signing settlement from Agent Wallet...`);
+              } else if (step === 4) {
+                addLog(`[Step 4/4: Execute] Broadcasting refund to Base Sepolia...`);
+              }
+            }
+          );
+
+          setSimTxHash(txHash);
+          addLog(`[Step 4/4: Execute] Refund transaction mined on-chain!`);
+          addLog(`[Tx Hash] ${txHash}`);
+          setSimSuccess(true);
+          setSimStep(5);
+          setSimActive(false);
+
+          setAgentPreauthorized(false);
+          setAgentWallet(null);
+          setAgentBalance(0);
+          collection.refresh(wallet.account);
+        } catch (err) {
+          console.error("Refund error:", err);
+          addLog(`[Agent Error] Refund failed: ${err.message || err}`);
+          setSimError(err.message || String(err));
+          setSimActive(false);
+          setSimStep(0);
+        }
+        return;
+      }
+    }
+    
+    setAgentPreauthorized(false);
+    setAgentWallet(null);
+    setAgentBalance(0);
+  };
+
+  const handleOpenAgentModal = (action = "agent") => {
+    setPendingAction(action);
+    setFundingSuccess(false);
+    setFundingTxHash("");
+    setFundingError("");
+    setFundingLogs([]);
+    setFundingStep(0);
+    
+    const provider = getProvider();
+    if (!agentWallet) {
+      const newWallet = ethers.Wallet.createRandom(provider);
+      setAgentWallet({
+        address: newWallet.address,
+        privateKey: newWallet.privateKey
+      });
+    }
+    
+    setShowAgentModal(true);
+  };
+
+  const handleConfirmFundAgent = async (amount) => {
+    setIsFundingAgent(true);
+    setFundingStep(1);
+    setFundingSuccess(false);
+    setFundingTxHash("");
+    setFundingError("");
+    
+    const logs = [];
+    const addLog = (msg) => {
+      logs.push({ time: new Date().toLocaleTimeString(), text: msg });
+      setFundingLogs([...logs]);
+    };
+
+    addLog(`[Agent Session] Generating ephemeral Agent keypair...`);
+    const provider = getProvider();
+    
+    let targetWallet = agentWallet;
+    if (!targetWallet) {
+      const newWallet = ethers.Wallet.createRandom(provider);
+      targetWallet = {
+        address: newWallet.address,
+        privateKey: newWallet.privateKey
+      };
+      setAgentWallet(targetWallet);
+    }
+    
+    addLog(`[Agent Session] Initializing UGF authorization transfer to agent address: ${targetWallet.address}...`);
+
+    try {
+      const signer = await provider.getSigner();
+      
+      const txHash = await executeGaslessTokenTransfer(
+        signer,
+        targetWallet.address,
+        amount,
+        (step) => {
+          setFundingStep(step);
+          if (step === 1) {
+            addLog(`[Step 1/4: Auth] Requesting EIP-191 signature...`);
+          } else if (step === 2) {
+            addLog(`[Step 2/4: Quote] Encoding transfer and requesting quote...`);
+          } else if (step === 3) {
+            addLog(`[Step 3/4: Settle] Signing ERC-3009 transfer from your wallet...`);
+          } else if (step === 4) {
+            addLog(`[Step 4/4: Execute] Submitting transaction to Base Sepolia node...`);
+          }
+        }
+      );
+
+      setFundingTxHash(txHash);
+      addLog(`[Step 4/4: Execute] Agent pre-funded successfully!`);
+      addLog(`[Tx Hash] ${txHash}`);
+      setFundingSuccess(true);
+      setFundingStep(5);
+      
+      setAgentPreauthorized(true);
+      setAgentBalance(parseFloat(amount));
+      
+      if (pendingAction === "subscription") {
+        setSubscriptionEnabled(true);
+      }
+      
+      collection.refresh(wallet.account);
+    } catch (err) {
+      console.error("Agent funding error:", err);
+      const errMsg = err?.message ?? String(err);
+      const shortMsg = errMsg.length > 80 ? errMsg.slice(0, 80) + "..." : errMsg;
+      addLog(`[Agent Error] Funding failed: ${shortMsg}`);
+      setFundingError(errMsg === "NO_MOCK_USD" || errMsg.includes("NO_MOCK_USD") ? "NO_MOCK_USD" : shortMsg);
+      setFundingStep(0);
+    } finally {
+      setIsFundingAgent(false);
+    }
+  };
+
+  const handleAgentModalClose = () => {
+    if (isFundingAgent) return;
+    setShowAgentModal(false);
+    setPendingAction("");
+  };
 
   // Simulation runner for EIP-191 Auth -> Quoting -> EIP-712/ERC-3009 Settlement -> Sponsorship & Execution
   const runSimulation = async (type, details) => {
@@ -1574,6 +2042,9 @@ export default function App() {
         } else if (type === "Agent Pre-Authorization") {
           recipientAddress = wallet.account;
           transferVal = "0.01";
+        } else if (type === "Subscription Permit") {
+          recipientAddress = CONTRACT_ADDRESS;
+          transferVal = "5"; // 5 TYI setup
         }
 
         addLog(`[Step 1/4: Auth] Requesting EIP-191 signature for wallet session login...`);
@@ -1710,7 +2181,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative selection:bg-indigo-500/30 selection:text-indigo-100 overflow-x-hidden">
-      <Nav wallet={wallet} />
+      <Nav wallet={wallet} collection={collection} />
       
       <main>
         <Hero
@@ -1756,6 +2227,12 @@ export default function App() {
           agentPreauthorized={agentPreauthorized}
           setAgentPreauthorized={setAgentPreauthorized}
           agentLogs={agentLogs}
+          
+          agentWallet={agentWallet}
+          agentBalance={agentBalance}
+          handleOpenAgentModal={handleOpenAgentModal}
+          handleDeactivateAgent={handleDeactivateAgent}
+          ensureWalletConnected={ensureWalletConnected}
         />
 
         <ProblemSolution />
@@ -1775,6 +2252,174 @@ export default function App() {
         isOpen={!!selectedBadge}
         onClose={handleModalClose}
       />
+
+      <AgentSessionModal
+        isOpen={showAgentModal}
+        onClose={handleAgentModalClose}
+        wallet={wallet}
+        onConfirmFund={handleConfirmFundAgent}
+        isFunding={isFundingAgent}
+        fundingStep={fundingStep}
+        fundingLogs={fundingLogs}
+        fundingSuccess={fundingSuccess}
+        fundingTxHash={fundingTxHash}
+        fundingError={fundingError}
+        setFundingError={setFundingError}
+        agentWalletAddress={agentWallet ? agentWallet.address : ""}
+      />
     </div>
+  );
+}
+
+function AgentSessionModal({
+  isOpen,
+  onClose,
+  wallet,
+  onConfirmFund,
+  isFunding,
+  fundingStep,
+  fundingLogs,
+  fundingSuccess,
+  fundingTxHash,
+  fundingError,
+  setFundingError,
+  agentWalletAddress,
+}) {
+  const [fundAmount, setFundAmount] = useState("5");
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.3 }}
+          className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-black/90 p-6 md:p-8 shadow-2xl"
+          style={{ background: "var(--gradient-card)" }}
+        >
+          {/* Neon radial backdrop */}
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.1),transparent_70%)]" />
+
+          {/* Header */}
+          <div className="relative z-10 flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+            <div className="flex items-center gap-2">
+              <Cpu className="h-5 w-5 text-[oklch(0.75_0.18_295)]" />
+              <h3 className="font-heading text-lg font-bold text-white">Pre-Authorize AI Agent Session</h3>
+            </div>
+            <button
+              onClick={onClose}
+              disabled={isFunding}
+              className="text-muted-foreground hover:text-white transition-colors text-lg"
+            >
+              ✕
+            </button>
+          </div>
+
+          {!fundingSuccess ? (
+            <div className="relative z-10 space-y-5">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                To enable autonomous gasless transactions for the AI Agent (and recurring billing for the Subscription), we will create a secure, ephemeral session wallet in your browser. Pre-authorize the session by funding it with TYI tokens.
+              </p>
+
+              <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 space-y-3">
+                <div>
+                  <div className="text-[10px] font-bold text-white/55 uppercase tracking-wider">Generated Session Wallet</div>
+                  <div className="mt-1 flex items-center justify-between">
+                    <span className="font-mono text-xs text-white">{agentWalletAddress}</span>
+                    <span className="text-[10px] font-bold bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20">Active Session</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-white/55 uppercase tracking-wider mb-2 block">
+                  Select Authorization Limit (TYI)
+                </label>
+                <div className="flex gap-2">
+                  {["2", "5", "10"].map((val) => (
+                    <button
+                      key={val}
+                      onClick={() => setFundAmount(val)}
+                      disabled={isFunding}
+                      className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                        fundAmount === val
+                          ? "bg-white text-black border-white"
+                          : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+                      }`}
+                    >
+                      {val} TYI
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {isFunding && (
+                <div className="rounded-2xl border border-white/5 bg-black/40 p-4 font-mono text-[11px] text-white/70 space-y-1 max-h-[120px] overflow-y-auto">
+                  {fundingLogs.map((log, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <span className="text-indigo-400">[{log.time}]</span>
+                      <span className={log.text.includes("Success") || log.text.includes("successful") ? "text-emerald-400" : log.text.includes("failed") ? "text-red-400" : ""}>{log.text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {fundingError && (
+                <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-950/10 text-red-400 text-xs leading-relaxed">
+                  {fundingError === "NO_MOCK_USD" 
+                    ? "Insufficient Mock USD (TYI) balance. Please claim from the faucet first."
+                    : fundingError}
+                </div>
+              )}
+
+              <button
+                disabled={isFunding}
+                onClick={() => onConfirmFund(fundAmount)}
+                className="w-full rounded-xl py-3 text-xs font-bold bg-white text-black hover:bg-white/90 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isFunding ? `Authorizing (Step ${fundingStep}/4)...` : `Approve & Pre-Authorize Agent`}
+              </button>
+            </div>
+          ) : (
+            <div className="relative z-10 text-center py-6 space-y-4">
+              <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(16,185,129,0.2)] animate-pulse">
+                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              </div>
+              <div>
+                <h4 className="font-heading text-lg font-bold text-white">Agent Pre-Authorized!</h4>
+                <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto leading-relaxed">
+                  The ephemeral session wallet has been funded with {fundAmount} TYI. The AI Agent will now trade autonomously and pay zero gas.
+                </p>
+              </div>
+
+              <div className="border-t border-white/5 pt-4 max-w-sm mx-auto flex flex-col gap-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Transaction Hash:</span>
+                  <span className="font-mono text-indigo-300 text-[10px] truncate max-w-[180px]">{fundingTxHash}</span>
+                </div>
+                <a
+                  href={`https://sepolia.basescan.org/tx/${fundingTxHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 text-xs font-bold text-white hover:underline inline-flex items-center justify-center gap-1"
+                >
+                  Verify on BaseScan <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="w-full rounded-xl py-2.5 text-xs font-semibold border border-white/10 bg-white/5 text-white hover:bg-white/10 transition-all mt-4"
+              >
+                Start Autonomous Agent
+              </button>
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </AnimatePresence>
   );
 }
