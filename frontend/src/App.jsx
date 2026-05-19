@@ -466,7 +466,11 @@ function Tech({ wallet }) {
           Abstracting away the complexity.
         </h2>
         <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-          GasFreeBadge focuses on one practical unlock: using UGF to make on-chain actions feel as simple as Web2, without relying on paymasters or bundlers.
+          Normally, to do anything on Ethereum, you need ETH sitting in your wallet just to pay for the action. 
+          <span className="text-white font-semibold"> UGF removes that requirement.</span> The user pays with Mock USD. UGF handles the rest and gets the transaction done.
+        </p>
+        <p className="mt-4 text-xs font-bold uppercase tracking-wider text-[oklch(0.75_0.18_295)] bg-[oklch(0.75_0.18_295/0.1)] px-3 py-2 rounded-lg border border-[oklch(0.75_0.18_295/0.2)] inline-block">
+          No paymasters · No bundlers · No ERC-4337.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           {["Base Sepolia", "Solidity", "ERC-721", "Gas sponsorship", "Wallet signatures"].map((t) => (
@@ -496,16 +500,33 @@ function Tech({ wallet }) {
       </Card>
       <Card>
         <Eyebrow color="green">Hackathon alignment</Eyebrow>
-        <h3 className="mt-5 font-heading text-2xl font-bold text-white">Fulfilling the UGF Vision.</h3>
-        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-          Building a beginner-friendly dApp that does something real.
+        <h3 className="mt-5 font-heading text-2xl font-bold text-white">Suggested Tracks</h3>
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+          Fulfilling the UGF vision across multiple modern developer categories:
         </p>
-        <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
-          <li className="flex items-center gap-2"><Dot c="purple" />Uses UGF React SDK</li>
-          <li className="flex items-center gap-2"><Dot c="green" />Deployed on Base Sepolia</li>
-          <li className="flex items-center gap-2"><Dot c="blue" />Users never touch ETH</li>
-          <li className="flex items-center gap-2"><Dot c="purple" />Real-world NFT credential use case</li>
-        </ul>
+        <div className="mt-5 space-y-4">
+          <div className="flex items-start gap-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-[oklch(0.78_0.17_160)]/10 text-xs font-bold text-[oklch(0.78_0.17_160)] border border-[oklch(0.78_0.17_160)]/20">M</span>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">Minting</h4>
+              <p className="text-[11px] text-muted-foreground mt-0.5">NFT minters, tickets, badges, and professional certificates.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-[oklch(0.75_0.18_295)]/10 text-xs font-bold text-[oklch(0.75_0.18_295)] border border-[oklch(0.75_0.18_295)]/20">P</span>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">Payments</h4>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Donations, friction-free checkouts, and recurring subscriptions.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-[oklch(0.7_0.18_250)]/10 text-xs font-bold text-[oklch(0.7_0.18_250)] border border-[oklch(0.7_0.18_250)]/20">W</span>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">Wallets & Agents</h4>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Frictionless token sending, reward claims, and agentic wallets.</p>
+            </div>
+          </div>
+        </div>
       </Card>
     </section>
   );
