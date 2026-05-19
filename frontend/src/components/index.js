@@ -6,3 +6,5 @@ export { BadgeCard } from './badge/BadgeCard';
 export { ClaimModal } from './badge/ClaimModal';
 export { MyCollection } from './collection/MyCollection';
 export { HowItWorks } from './HowItWorks';
+export { CallToAction } from './CallToAction';
+export { Features } from './Features';

@@ -18,6 +18,8 @@ import {
   MyCollection,
   HowItWorks,
   WalletStateBanners,
+  Features,
+  CallToAction,
 } from '@/components';
 
 const isDeployed = CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000';
@@ -81,11 +83,11 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-[#05070c] text-slate-100 dot-grid relative selection:bg-indigo-500/30 selection:text-indigo-100 overflow-x-hidden">
       {/* Ambient focal glows */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] max-w-[800px] max-h-[800px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 60%)', filter: 'blur(100px)' }} />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] max-w-[600px] max-h-[600px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 60%)', filter: 'blur(80px)' }} />
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] max-w-[1000px] max-h-[1000px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 60%)', filter: 'blur(120px)' }} />
+        <div className="absolute top-[10%] right-[-10%] w-[50vw] h-[50vw] max-w-[800px] max-h-[800px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 65%)', filter: 'blur(120px)' }} />
       </div>
 
       <Header
@@ -102,6 +104,16 @@ export default function App() {
         className="flex-1 relative z-10 w-full max-w-[1000px] mx-auto px-6 pt-12 pb-24"
       >
         <HeroSection stats={collection.stats} />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5 }}
+          className="mt-8 mb-16"
+        >
+          <Features />
+        </motion.div>
 
         <AnimatePresence>
           <WalletStateBanners wallet={wallet} collection={collection} />
@@ -206,6 +218,18 @@ export default function App() {
           className="mt-24"
         >
           <HowItWorks />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5 }}
+        >
+          <CallToAction 
+            onConnect={wallet.connect} 
+            isWalletReady={isWalletReady} 
+          />
         </motion.div>
       </motion.main>
 
