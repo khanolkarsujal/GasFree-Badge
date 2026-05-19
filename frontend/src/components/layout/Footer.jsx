@@ -27,7 +27,7 @@ export function Footer() {
               className="text-[13px] font-medium text-[#64748b] hover:text-white transition-colors">
               Contract
             </a>
-            <a href="https://universalgasframework.com" target="_blank" rel="noreferrer"
+            <a href="https://universalgasframework.com/docs/overview" target="_blank" rel="noreferrer"
               className="text-[13px] font-medium text-[#64748b] hover:text-white transition-colors">
               UGF Docs
             </a>

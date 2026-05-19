@@ -32,7 +32,7 @@ export function CallToAction({ onConnect, isWalletReady }) {
               </button>
             )}
             <a
-              href="https://universalgasframework.com"
+              href="https://universalgasframework.com/docs/overview"
               target="_blank"
               rel="noreferrer"
               className="bg-transparent hover:bg-white/5 border border-white/10 text-white px-6 py-2.5 rounded-full font-bold text-[0.95rem] transition-colors inline-block"

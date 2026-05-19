@@ -61,7 +61,7 @@ function Nav({ wallet, collection }) {
             Contract
           </a>
           <a
-            href="https://github.com/khanolkarsujal/GasFree-Badge#readme"
+            href="https://universalgasframework.com/docs/overview"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-colors hover:text-white"
@@ -1398,7 +1398,7 @@ function Tech({ wallet }) {
         </p>
         <div className="mt-5 space-y-3">
           <a
-            href="https://universalgasframework.com/docs"
+            href="https://universalgasframework.com/docs/overview"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.04] p-3 text-xs text-white hover:text-[oklch(0.75_0.18_295)] transition-all group/res"
@@ -1411,7 +1411,7 @@ function Tech({ wallet }) {
           </a>
 
           <a
-            href="https://universalgasframework.com/docs/testnet"
+            href="https://universalgasframework.com/docs/overview"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.04] p-3 text-xs text-white hover:text-[oklch(0.75_0.18_295)] transition-all group/res"
