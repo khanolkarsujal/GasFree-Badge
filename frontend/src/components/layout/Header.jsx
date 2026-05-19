@@ -1,6 +1,6 @@
 import { CONTRACT_ADDRESS } from '../../contractConfig';
 import { basescanAddress } from '../../lib/utils';
-import { Globe } from 'lucide-react';
+import { Globe, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function Header({ account, isRightChain, onConnect }) {
@@ -9,10 +9,10 @@ export function Header({ account, isRightChain, onConnect }) {
       
       {/* Left — Logo */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-[8px] bg-[#a855f7] flex items-center justify-center text-[0.85rem] font-bold text-white">
-          G
+        <div className="w-8 h-8 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 flex items-center justify-center">
+          <ShieldCheck className="w-4 h-4 text-[#a855f7]" />
         </div>
-        <span className="text-[1.1rem] font-bold tracking-tight text-white">
+        <span className="text-[1.05rem] font-bold tracking-tight text-white">
           GasFreeBadge
         </span>
       </div>

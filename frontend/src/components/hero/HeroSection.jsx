@@ -19,16 +19,13 @@ export function HeroSection({ stats, onConnect }) {
         {/* Left Column — Content */}
         <div className="flex flex-col flex-1 max-w-[560px]">
           
-          {/* Top Pill */}
-          <div className="inline-flex items-center gap-2 self-start px-3 py-1.5 rounded-full bg-[#13141a] border border-white/10 text-slate-300 text-[10px] font-semibold uppercase tracking-[0.15em] mb-8 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" aria-hidden />
-            Gasless NFT • UGF Hackathon 2026
-          </div>
+          {/* Removed Top Pill as it is not in the design */}
 
           {/* Headline */}
-          <h1 className="text-[3.75rem] sm:text-[4.5rem] font-sans font-extrabold leading-[1.05] tracking-tight text-white mb-6">
-            On-chain credentials.
-            <span className="block text-[#a855f7]">Without gas friction.</span>
+          <h1 className="text-[4rem] sm:text-[5.5rem] font-sans font-extrabold leading-[1] tracking-tighter text-white mb-6">
+            On-chain<br />credentials.<br />
+            Without <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#c084fc] to-[#e879f9]">gas</span><br />
+            friction.
           </h1>
 
           {/* Description */}
@@ -37,19 +34,22 @@ export function HeroSection({ stats, onConnect }) {
           </p>
 
           <div className="flex flex-wrap items-center gap-4 mb-10">
-            <button onClick={onConnect} className="bg-white hover:bg-gray-200 text-black px-6 py-2.5 rounded-xl font-bold text-[0.95rem] transition-colors">
+            <button onClick={onConnect} className="bg-white hover:bg-gray-200 text-black px-6 py-3 rounded-full font-bold text-[0.95rem] transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)]">
               Connect Wallet
+            </button>
+            <button className="bg-[#13141a] border border-white/5 hover:bg-white/5 text-white px-6 py-3 rounded-full font-bold text-[0.95rem] transition-colors flex items-center gap-2">
+              Try demo flow <span className="text-[#94a3b8]">→</span>
             </button>
           </div>
 
           {/* Contract Address */}
-          <div className="flex items-center gap-2.5 self-start px-4 py-2 rounded-full bg-[#13141a] border border-white/5 group hover:border-white/10 transition-colors cursor-pointer" onClick={handleCopy}>
+          <div className="flex items-center gap-3 self-start px-4 py-2 rounded-full bg-transparent border border-white/5 group hover:border-white/10 transition-colors cursor-pointer" onClick={handleCopy}>
             <span className="text-[#475569] text-[10px] font-bold uppercase tracking-[0.15em]">Contract</span>
-            <span className="font-mono text-[0.8rem] text-slate-300 tracking-wide">
-              {CONTRACT_ADDRESS.slice(0, 8)}…{CONTRACT_ADDRESS.slice(-6)}
+            <span className="font-mono text-[0.8rem] text-slate-300 tracking-wide font-medium">
+              {CONTRACT_ADDRESS.slice(0, 8)}...{CONTRACT_ADDRESS.slice(-6)}
             </span>
             <div className="relative">
-              <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 transition-colors" />
+              <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-slate-300 transition-colors" />
               <AnimatePresence>
                 {copied && (
                   <motion.div 
@@ -64,29 +64,29 @@ export function HeroSection({ stats, onConnect }) {
           </div>
 
           {/* Stats Box */}
-          <div className="bg-[#0b0c10]/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:divide-x divide-white/5 shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
+          <div className="bg-[#0b0c10]/40 backdrop-blur-md border border-white/5 rounded-2xl p-5 mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:divide-x divide-white/5 w-fit">
             {/* Gas Cost */}
-            <div className="flex flex-col">
+            <div className="flex flex-col pr-4">
               <span className="text-[10px] text-emerald-400 font-bold tracking-[0.15em] uppercase mb-1">Gas Cost</span>
-              <span className="text-[2.5rem] font-bold text-emerald-400 leading-none tracking-tighter mb-2">0ETH</span>
-              <span className="text-[10px] text-[#475569]">Sponsored via TYM Mock USD</span>
+              <span className="text-[2.25rem] font-bold text-emerald-400 leading-none tracking-tighter mb-1">0ETH</span>
+              <span className="text-[10px] text-[#475569]">sponsored by UGF</span>
             </div>
             
             {/* Claimed */}
-            <div className="flex flex-col sm:pl-6">
-              <span className="text-[10px] text-[#64748b] font-bold tracking-[0.15em] uppercase mb-3">Claimed</span>
+            <div className="flex flex-col sm:px-6 justify-center">
+              <span className="text-[10px] text-[#64748b] font-bold tracking-[0.15em] uppercase mb-2">Claimed</span>
               <div className="flex items-baseline gap-1">
-                <span className="text-xl font-bold text-white">{stats.minted.toLocaleString()}</span>
-                <span className="text-sm font-medium text-[#475569]">/ {stats.total.toLocaleString()}</span>
+                <span className="text-2xl font-bold text-white">{stats.minted.toLocaleString()}</span>
+                <span className="text-xs font-medium text-[#475569]">/{stats.total.toLocaleString()}</span>
               </div>
             </div>
             
             {/* Network */}
-            <div className="flex flex-col sm:pl-6">
-              <span className="text-[10px] text-[#64748b] font-bold tracking-[0.15em] uppercase mb-3">Network</span>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]" />
-                <span className="text-[0.95rem] font-bold text-white">Base Sepolia</span>
+            <div className="flex flex-col sm:pl-6 justify-center">
+              <span className="text-[10px] text-[#64748b] font-bold tracking-[0.15em] uppercase mb-2">Network</span>
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                <span className="text-[0.9rem] font-semibold text-white">Base Sepolia</span>
               </div>
             </div>
           </div>
