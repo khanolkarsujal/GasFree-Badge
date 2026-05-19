@@ -115,10 +115,9 @@ function Hero({ stats, wallet, onConnect }) {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>
           </div>
-          <a
-            href="#"
+          <button
             onClick={handleCopy}
-            className="mt-8 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs relative"
+            className="mt-8 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs relative hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
           >
             <span className="font-semibold uppercase tracking-wider text-muted-foreground">Contract</span>
             <span className="font-mono text-white/90">
@@ -137,7 +136,7 @@ function Hero({ stats, wallet, onConnect }) {
                 </motion.div>
               )}
             </AnimatePresence>
-          </a>
+          </button>
           <div className="mt-6 grid max-w-lg grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
             <Stat label="Gas cost" value={<span className="text-[oklch(0.78_0.17_160)]">0 ETH</span>} sub="sponsored by UGF" />
             <Stat label="Claimed" value={<><span className="text-white">{stats.minted}</span><span className="text-muted-foreground"> /{stats.total.toLocaleString()}</span></>} divider />
@@ -164,7 +163,7 @@ function Stat({ label, value, sub, divider }) {
 function CredentialCard({ isWalletReady }) {
   return (
     <div
-      className="relative rounded-3xl border border-white/10 p-6 shadow-[0_30px_80px_-20px_rgba(120,80,220,0.35)] sm:p-7"
+      className="relative rounded-3xl border border-white/10 p-6 shadow-[0_30px_80px_-20px_rgba(120,80,220,0.35)] sm:p-7 transition-all duration-500 hover:shadow-[0_30px_80px_-10px_rgba(120,80,220,0.5)] hover:-translate-y-1"
       style={{ background: "var(--gradient-card)" }}
     >
       <div className="flex items-start justify-between">
@@ -172,7 +171,7 @@ function CredentialCard({ isWalletReady }) {
           <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Credential preview</div>
           <h3 className="mt-2 font-heading text-2xl font-bold text-white">Professional Badge</h3>
         </div>
-        <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-[oklch(0.7_0.2_295)] to-[oklch(0.5_0.22_290)] shadow-[0_0_24px_-4px_oklch(0.6_0.22_295/0.7)]">
+        <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-[oklch(0.7_0.2_295)] to-[oklch(0.5_0.22_290)] shadow-[0_0_24px_-4px_oklch(0.6_0.22_295/0.7)] animate-float">
           <Shield className="h-5 w-5 text-white" />
         </span>
       </div>
@@ -244,7 +243,7 @@ function BadgeCatalogSection({ badges, claimed, isWalletReady, onClaim, wallet, 
           return (
             <div
               key={badge.id}
-              className="relative rounded-3xl border border-white/10 p-6 flex flex-col justify-between"
+              className="relative rounded-3xl border border-white/10 p-6 flex flex-col justify-between transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_50px_oklch(0.75_0.18_295/0.12)] hover:-translate-y-1 group/card"
               style={{ background: "var(--gradient-card)" }}
             >
               <div>
@@ -253,7 +252,7 @@ function BadgeCatalogSection({ badges, claimed, isWalletReady, onClaim, wallet, 
                     <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{badge.rarity} Badge</div>
                     <h3 className="mt-2 font-heading text-xl font-bold text-white">{badge.name}</h3>
                   </div>
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/5">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/5 transition-transform duration-300 group-hover/card:scale-110">
                     <span className="text-lg">{badge.icon}</span>
                   </span>
                 </div>
@@ -276,10 +275,10 @@ function BadgeCatalogSection({ badges, claimed, isWalletReady, onClaim, wallet, 
               <button
                 disabled={isClaimed || isClaiming || !isDeployed}
                 onClick={isWalletReady ? () => onClaim(badge) : wallet.connect}
-                className={`mt-6 w-full rounded-xl py-2.5 text-xs font-semibold transition-all ${
+                className={`mt-6 w-full rounded-xl py-2.5 text-xs font-semibold transition-all duration-200 ${
                   isClaimed
                     ? "bg-emerald-950/20 border border-emerald-500/20 text-emerald-400 cursor-default"
-                    : "bg-white text-black hover:bg-white/90 cursor-pointer"
+                    : "bg-white text-black hover:bg-white/90 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer"
                 }`}
               >
                 {isClaimed ? "Collected" : isWalletReady ? "Claim Badge" : "Connect to Claim"}
@@ -359,7 +358,7 @@ function ProblemSolution() {
 function Card({ children, className = "" }) {
   return (
     <div
-      className={`rounded-3xl border border-white/10 p-7 sm:p-9 ${className}`}
+      className={`rounded-3xl border border-white/10 p-7 sm:p-9 transition-all duration-300 hover:border-white/20 ${className}`}
       style={{ background: "var(--gradient-card)" }}
     >
       {children}
@@ -369,7 +368,7 @@ function Card({ children, className = "" }) {
 
 function MiniCard({ title, desc }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all duration-300 hover:bg-white/[0.04] hover:border-white/15">
       <div className="font-heading text-xl font-bold text-white">{title}</div>
       <div className="mt-2 text-xs leading-relaxed text-muted-foreground">{desc}</div>
     </div>
@@ -445,7 +444,7 @@ function Workflow() {
       </div>
       <div className="space-y-4">
         {steps.map((s) => (
-          <div key={s.n} className="flex items-start gap-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6">
+          <div key={s.n} className="flex items-start gap-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6 transition-all duration-300 hover:bg-white/[0.04] hover:border-white/15">
             <span className={`font-heading text-2xl font-bold ${s.c}`}>{s.n}</span>
             <div>
               <h4 className="font-heading text-lg font-bold text-white">{s.t}</h4>
@@ -471,7 +470,7 @@ function Tech({ wallet }) {
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           {["Base Sepolia", "Solidity", "ERC-721", "Gas sponsorship", "Wallet signatures"].map((t) => (
-            <span key={t} className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs font-semibold text-white">
+            <span key={t} className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/10 hover:border-white/20 cursor-default">
               {t}
             </span>
           ))}
@@ -490,7 +489,7 @@ function Tech({ wallet }) {
         </div>
         <button
           onClick={wallet.account ? undefined : wallet.connect}
-          className="mt-5 w-full rounded-xl bg-white py-3 text-sm font-semibold text-black transition-all hover:bg-white/90"
+          className="mt-5 w-full rounded-xl bg-white py-3 text-sm font-semibold text-black transition-all hover:bg-white/90 hover:shadow-[0_0_24px_-4px_rgba(255,255,255,0.4)]"
         >
           {wallet.account ? "Connected" : "Connect Wallet"}
         </button>
@@ -537,7 +536,7 @@ function CTA({ wallet, onConnect }) {
           <div className="flex flex-col gap-3">
             <button
               onClick={wallet.account ? undefined : onConnect}
-              className="rounded-full bg-white px-8 py-3 text-sm font-semibold text-black transition-all hover:bg-white/90"
+              className="rounded-full bg-white px-8 py-3 text-sm font-semibold text-black transition-all hover:bg-white/90 hover:shadow-[0_0_24px_-4px_rgba(255,255,255,0.4)]"
             >
               {wallet.account ? "Connected" : "Connect Wallet"}
             </button>
