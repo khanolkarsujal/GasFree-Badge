@@ -86,25 +86,31 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
     signer.getAddress(),
   ]);
 
-  // Progress that increases during work, pauses during network waits
-  onProgress(5);
+  // Smart progress: continuous during processing, pauses during network waits
+  let progress = 0;
+  let isProcessing = true;
+  const progressInterval = setInterval(() => {
+    if (isProcessing && progress < 95) {
+      progress += 2;
+      onProgress(progress);
+    }
+  }, 50);
 
   // ── 1. Authenticate ──────────────────────────────────────────────────────────
   try {
-    onProgress(10);
-    onProgress(15);
+    isProcessing = false; // Pause during network call
     await client.auth.login(signer);
-    onProgress(25);
+    isProcessing = true; // Resume after network call
   } catch (err) {
+    clearInterval(progressInterval);
     throw new Error(`Authentication failed: ${_msg(err)}`);
   }
 
   // ── 2. Quote — encode claimBadge(recipient, badgeType) ──────────────────────
-  onProgress(30);
   const data  = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
   let quote;
   try {
-    onProgress(35);
+    isProcessing = false; // Pause during network call
     quote = await client.quote.get({
       payer_address: payerAddress.toLowerCase(),
       tx_object: JSON.stringify({
@@ -114,34 +120,38 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
         value: '0x0',
       }),
     });
-    onProgress(50);
+    isProcessing = true; // Resume after network call
   } catch (err) {
+    clearInterval(progressInterval);
     throw new Error(`Quote failed: ${_msg(err)}`);
   }
 
   // ── 3. Settle — ERC-3009 TYI signature (user pays zero ETH) ─────────────────
-  onProgress(55);
   try {
-    onProgress(60);
+    isProcessing = false; // Pause during network call
     await client.payment.x402.execute({ quote, signer });
-    onProgress(75);
+    isProcessing = true; // Resume after network call
   } catch (err) {
+    clearInterval(progressInterval);
     const msg = _msg(err);
     if (/400|insufficient|balance|HTTP 4/i.test(msg)) throw new Error('NO_MOCK_USD');
     throw new Error(`Payment failed: ${msg}`);
   }
 
   // ── 4. Execute — UGF sponsors ETH, confirms on-chain ────────────────────────
-  onProgress(80);
   try {
+    isProcessing = false; // Pause during network call
     const { userTxHash } = await client.chains.evm.sponsorAndExecute(
       quote.digest,
       signer,
       async () => ({ to: CONTRACT_ADDRESS.toLowerCase(), data, value: 0n })
     );
+    isProcessing = true; // Resume after network call
+    clearInterval(progressInterval);
     onProgress(100);
     return userTxHash;
   } catch (err) {
+    clearInterval(progressInterval);
     const msg = _msg(err);
     if (msg.includes('MaxSupplyReached')) throw new Error('MAX_SUPPLY');
     if (msg.includes('ContractPaused'))   throw new Error('PAUSED');
