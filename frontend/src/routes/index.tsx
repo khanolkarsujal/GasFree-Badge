@@ -84,6 +84,7 @@ function Index() {
           isMinting={isMinting}
           mintSuccess={mintSuccess}
           progress={progress}
+          txHash={txHash}
         />
         <Dashboard
           wallet={wallet}
