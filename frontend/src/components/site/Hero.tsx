@@ -42,7 +42,10 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
   const isConnected = !!(wallet.account && wallet.isRightChain);
 
   return (
-    <section className={`relative pt-32 pb-24 overflow-hidden transition-all duration-300 ${isMinting ? 'blur-sm' : ''}`}>
+    <section className="relative pt-32 pb-24 overflow-hidden">
+      {isMinting && (
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-0 pointer-events-none" />
+      )}
       <div className="absolute inset-0 bg-glow-radial pointer-events-none" />
       <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-12 items-center relative">
         {/* Left Column */}
@@ -95,14 +98,14 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
 
           {/* Progress Bar */}
           {isMinting && (
-            <div className="mt-6 w-full max-w-md relative z-10">
+            <div className="mt-6 w-full max-w-md relative z-50">
               <div className="flex justify-between text-sm font-semibold text-white mb-2">
                 <span>Transaction Progress</span>
                 <span>{Math.round(progress || 0)}%</span>
               </div>
-              <div className="h-6 rounded-full bg-white/10 overflow-hidden border-2 border-border/50 relative">
+              <div className="h-8 rounded-full bg-white/10 overflow-hidden border-2 border-white/30 relative">
                 <div 
-                  className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-[var(--violet)] via-[var(--pink)] to-[var(--violet)] shadow-[0_0_20px_rgba(139,92,246,0.6)] animate-pulse"
+                  className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-emerald-500 shadow-[0_0_30px_rgba(139,92,246,0.8)] animate-pulse"
                   style={{ width: `${Math.max(progress || 0, 5)}%` }}
                 />
               </div>
