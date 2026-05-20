@@ -53,28 +53,9 @@ function Index() {
       const provider = (window as any).ethereum;
       const signer = await new ethers.BrowserProvider(provider).getSigner();
       
-      // Simulate realistic progress like payment apps
-      setProgress(10);
-      await new Promise(r => setTimeout(r, 300));
-      
-      setProgress(25);
-      await new Promise(r => setTimeout(r, 400));
-      
-      setProgress(40);
-      await new Promise(r => setTimeout(r, 300));
-      
-      setProgress(55);
-      await new Promise(r => setTimeout(r, 400));
-      
-      setProgress(70);
-      await new Promise(r => setTimeout(r, 300));
-      
-      setProgress(85);
-      await new Promise(r => setTimeout(r, 400));
-      
-      setProgress(95);
-      const hash = await executeGaslessClaim(signer, badgeType);
-      setProgress(100);
+      const hash = await executeGaslessClaim(signer, badgeType, (progressValue: number) => {
+        setProgress(progressValue);
+      });
       setTxHash(hash);
       collection.refresh(wallet.account);
     } catch (error) {

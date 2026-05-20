@@ -95,15 +95,22 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
           {/* Progress Bar */}
           {isMinting && (
             <div className="mt-6 w-full max-w-md">
-              <div className="flex justify-between text-xs text-muted-foreground mb-2">
+              <div className="flex justify-between text-sm font-semibold text-white mb-2">
                 <span>Transaction Progress</span>
                 <span>{Math.round(progress || 0)}%</span>
               </div>
-              <div className="h-4 rounded-full bg-white/20 overflow-hidden border border-border/30">
+              <div className="h-6 rounded-full bg-white/10 overflow-hidden border-2 border-border/50 relative">
                 <div 
-                  className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-[var(--violet)] to-[var(--pink)] shadow-[0_0_15px_rgba(139,92,246,0.5)]"
+                  className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-[var(--violet)] via-[var(--pink)] to-[var(--violet)] shadow-[0_0_20px_rgba(139,92,246,0.6)] animate-pulse"
                   style={{ width: `${Math.max(progress || 0, 5)}%` }}
                 />
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground text-center">
+                {(progress || 0) < 25 && "Authenticating wallet..."}
+                {(progress || 0) >= 25 && (progress || 0) < 50 && "Getting transaction quote..."}
+                {(progress || 0) >= 50 && (progress || 0) < 75 && "Settling payment..."}
+                {(progress || 0) >= 75 && (progress || 0) < 100 && "Executing transaction..."}
+                {(progress || 0) === 100 && "Transaction complete!"}
               </div>
             </div>
           )}

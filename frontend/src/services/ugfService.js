@@ -56,20 +56,24 @@ export async function getClaimedBadges(provider, address) {
  *
  * @param {ethers.Signer} signer    Connected signer (Base Sepolia required)
  * @param {number}        badgeType The badge type ID (0 = Explorer, 1 = Builder, 2 = Pioneer)
+ * @param {Function}      onProgress Progress callback: receives percentage (0-100)
  * @returns {Promise<string>}       Confirmed on-chain tx hash
  */
-export async function executeGaslessClaim(signer, badgeType) {
+export async function executeGaslessClaim(signer, badgeType, onProgress = () => {}) {
   const client       = new UGFClient();
   const payerAddress = await signer.getAddress();
 
   // ── 1. Authenticate ──────────────────────────────────────────────────────────
+  onProgress(10);
   try {
     await client.auth.login(signer);
+    onProgress(25);
   } catch (err) {
     throw new Error(`Authentication failed: ${_msg(err)}`);
   }
 
   // ── 2. Quote — encode claimBadge(recipient, badgeType) ──────────────────────
+  onProgress(30);
   const iface = new ethers.Interface(CONTRACT_ABI);
   const data  = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
   let quote;
@@ -83,13 +87,16 @@ export async function executeGaslessClaim(signer, badgeType) {
         value: '0x0',
       }),
     });
+    onProgress(50);
   } catch (err) {
     throw new Error(`Quote failed: ${_msg(err)}`);
   }
 
   // ── 3. Settle — ERC-3009 TYI signature (user pays zero ETH) ─────────────────
+  onProgress(55);
   try {
     await client.payment.x402.execute({ quote, signer });
+    onProgress(75);
   } catch (err) {
     const msg = _msg(err);
     if (/400|insufficient|balance|HTTP 4/i.test(msg)) throw new Error('NO_MOCK_USD');
@@ -97,12 +104,14 @@ export async function executeGaslessClaim(signer, badgeType) {
   }
 
   // ── 4. Execute — UGF sponsors ETH, confirms on-chain ────────────────────────
+  onProgress(80);
   try {
     const { userTxHash } = await client.chains.evm.sponsorAndExecute(
       quote.digest,
       signer,
       async () => ({ to: CONTRACT_ADDRESS.toLowerCase(), data, value: 0n })
     );
+    onProgress(100);
     return userTxHash;
   } catch (err) {
     const msg = _msg(err);
