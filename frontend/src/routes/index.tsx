@@ -32,6 +32,7 @@ function Index() {
   const [mintSuccess, setMintSuccess] = useState(false);
   const [txHash, setTxHash] = useState("");
   const [progress, setProgress] = useState(0);
+  const [cachedSigner, setCachedSigner] = useState<any>(null);
 
   const handleMint = async (badgeType: number = 0) => {
     if (!wallet.account) {
@@ -50,18 +51,23 @@ function Index() {
     setMintSuccess(true);
     
     try {
-      const provider = (window as any).ethereum;
-      const signer = await new ethers.BrowserProvider(provider).getSigner();
+      // Reuse cached signer or create new one
+      let signer = cachedSigner;
+      if (!signer) {
+        const provider = (window as any).ethereum;
+        signer = await new ethers.BrowserProvider(provider).getSigner();
+        setCachedSigner(signer);
+      }
       
-      const hash = await executeGaslessClaim(signer, badgeType, (progressValue: number) => {
-        setProgress(progressValue);
-      });
+      const hash = await executeGaslessClaim(signer, badgeType);
       setTxHash(hash);
       collection.refresh(wallet.account);
     } catch (error) {
       setMintSuccess(false);
       setProgress(0);
       console.error("Mint failed:", error);
+      // Clear cached signer on error to force re-creation
+      setCachedSigner(null);
     } finally {
       setIsMinting(false);
     }

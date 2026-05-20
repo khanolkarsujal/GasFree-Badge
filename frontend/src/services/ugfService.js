@@ -81,25 +81,15 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   const client       = getUGFClient();
   const iface        = getContractInterface();
   
-  // Ultra-fast parallel initialization
+  // Parallelize all pre-transaction checks for maximum speed
   const [payerAddress] = await Promise.all([
     signer.getAddress(),
   ]);
-
-  // Continuous non-stop progress from 0%
-  let progress = 0;
-  const progressInterval = setInterval(() => {
-    if (progress < 95) {
-      progress += 2;
-      onProgress(progress);
-    }
-  }, 150);
 
   // ── 1. Authenticate ──────────────────────────────────────────────────────────
   try {
     await client.auth.login(signer);
   } catch (err) {
-    clearInterval(progressInterval);
     throw new Error(`Authentication failed: ${_msg(err)}`);
   }
 
@@ -117,7 +107,6 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
       }),
     });
   } catch (err) {
-    clearInterval(progressInterval);
     throw new Error(`Quote failed: ${_msg(err)}`);
   }
 
@@ -125,7 +114,6 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   try {
     await client.payment.x402.execute({ quote, signer });
   } catch (err) {
-    clearInterval(progressInterval);
     const msg = _msg(err);
     if (/400|insufficient|balance|HTTP 4/i.test(msg)) throw new Error('NO_MOCK_USD');
     throw new Error(`Payment failed: ${msg}`);
@@ -138,11 +126,8 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
       signer,
       async () => ({ to: CONTRACT_ADDRESS.toLowerCase(), data, value: 0n })
     );
-    clearInterval(progressInterval);
-    onProgress(100);
     return userTxHash;
   } catch (err) {
-    clearInterval(progressInterval);
     const msg = _msg(err);
     if (msg.includes('MaxSupplyReached')) throw new Error('MAX_SUPPLY');
     if (msg.includes('ContractPaused'))   throw new Error('PAUSED');
