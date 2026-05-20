@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { getCollectionStats, getTYIBalance, getClaimedBadges } from '../services/ugfService';
-import { platformApi, getStoredToken } from '../api/platformClient';
+import { getCollectionStats, getClaimedBadges } from '../services/ugfService';
 
 /**
  * Manages on-chain collection data — supply stats, TYI balance, claimed badges.
@@ -25,28 +24,17 @@ export function useCollection(account) {
       return;
     }
 
-    const addr     = overrideAccount ?? account;
+    const addr = overrideAccount ?? account;
 
     try {
-      const [s, tyi, clChain, clPlatform] = await Promise.all([
+      const [s, clChain] = await Promise.all([
         getCollectionStats(provider),
-        addr ? getTYIBalance(provider, addr) : Promise.resolve(null),
         addr ? getClaimedBadges(provider, addr) : Promise.resolve([]),
-        addr && getStoredToken()
-          ? platformApi.badgeMine().catch(() => ({ claimed: [] }))
-          : Promise.resolve({ claimed: [] }),
       ]);
 
-      const platformBadges = (clPlatform.claimed || []).map((b) => ({
-        tokenId: Number(b.tokenId) || 0,
-        badgeType: 0,
-        txHash: b.txHash,
-        block: 0,
-      }));
-
       setStats(s);
-      setTYIBalance(tyi);
-      setClaimed(platformBadges.length > 0 ? platformBadges : clChain);
+      setClaimed(clChain);
+      setTYIBalance(null); // TYI balance check removed as platform integration was removed
     } catch (err) {
       console.error("Error refreshing collection data:", err);
     }

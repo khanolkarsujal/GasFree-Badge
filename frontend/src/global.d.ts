@@ -2,8 +2,4 @@ declare module "@/contractConfig";
 declare module "@/lib/constants";
 declare module "@/hooks/useWallet";
 declare module "@/hooks/useCollection";
-declare module "@/hooks/usePlatformAuth";
-declare module "@/hooks/usePlatformWallet";
-declare module "@/api/platformClient";
 declare module "@/services/ugfService";
-declare module "@/services/sessionStore";
