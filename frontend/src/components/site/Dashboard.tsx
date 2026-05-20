@@ -68,6 +68,27 @@ export function Dashboard({ wallet, collection, paymentCompleted, simStep, simAc
             {/* Transaction Steps Card */}
             <div className="rounded-2xl border border-border bg-secondary/40 p-5 space-y-3">
               <div className="font-mono-label text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Checkout Milestone</div>
+              
+              {/* Progress Bar */}
+              <div className="mt-2">
+                <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                  <span>Progress</span>
+                  <span>{paymentCompleted ? "100%" : `${Math.min(simStep * 25, 100)}%`}</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      paymentCompleted 
+                        ? "bg-emerald-500" 
+                        : simActive 
+                          ? "bg-gradient-to-r from-[var(--violet)] to-[var(--pink)]" 
+                          : "bg-white/20"
+                    }`}
+                    style={{ width: `${paymentCompleted ? 100 : Math.min(simStep * 25, 100)}%` }}
+                  />
+                </div>
+              </div>
+
               <StepLine
                 n={1}
                 title="Initiate Checkout"
