@@ -65,19 +65,19 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
               <button
                 onClick={() => onMint(0)}
                 disabled={isMinting || mintSuccess}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--pink)] px-5 py-3 text-sm font-medium text-white shadow-[0_0_40px_oklch(0.7_0.22_295_/_0.45)] hover:opacity-90 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-bold text-black shadow-[0_0_40px_rgba(255,255,255,0.6)] hover:bg-white/90 hover:shadow-[0_0_50px_rgba(255,255,255,0.8)] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-2 border-white/20"
               >
                 {mintSuccess ? (
                   <>
-                    <Zap className="w-4 h-4" /> Badge Minted!
+                    <Zap className="w-4 h-4 text-emerald-600" /> Badge Minted!
                   </>
                 ) : isMinting ? (
                   <>
-                    <Zap className="w-4 h-4 animate-spin" /> Minting...
+                    <Zap className="w-4 h-4 text-[var(--violet)] animate-spin" /> Minting...
                   </>
                 ) : (
                   <>
-                    <Zap className="w-4 h-4" /> Mint Badge
+                    <Zap className="w-4 h-4 text-[var(--violet)]" /> Mint Badge
                   </>
                 )}
               </button>
