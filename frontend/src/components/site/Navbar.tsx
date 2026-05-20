@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Link2 } from "lucide-react";
+import { Link2, Wallet } from "lucide-react";
+import { ethers } from "ethers";
 
 interface NavbarProps {
   wallet: any;
@@ -14,6 +16,19 @@ const nav = [
 ];
 
 export function Navbar({ wallet, collection, platform, platformAuth, setPlatformTick }: NavbarProps) {
+  const [ethBalance, setEthBalance] = useState("0.00");
+  const isConnected = !!(wallet.account && wallet.isRightChain);
+
+  // Get ETH balance
+  if (isConnected && typeof window !== "undefined" && (window as any).ethereum) {
+    const provider = new ethers.BrowserProvider((window as any).ethereum);
+    provider.getBalance(wallet.account)
+      .then((bal) => {
+        setEthBalance(parseFloat(ethers.formatEther(bal)).toFixed(4));
+      })
+      .catch(() => setEthBalance("0.00"));
+  }
+
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-border/40 backdrop-blur-xl bg-background/60">
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
@@ -42,14 +57,26 @@ export function Navbar({ wallet, collection, platform, platformAuth, setPlatform
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* Chain Balance (TYI) */}
-          {wallet.account && wallet.isRightChain && collection && (
-            <div className="hidden sm:flex items-center gap-2 rounded-full border border-border bg-card/40 px-3.5 py-2 text-xs text-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--mint)]" />
-              <span className="font-semibold text-white/90">
-                {collection.tyiBalance !== null ? `${collection.tyiBalance.toFixed(2)} TYI` : "0.00 TYI"}
-              </span>
-              <span className="text-white/40 font-mono-label">chain</span>
+          {/* Wallet Info Card */}
+          {wallet.account && wallet.isRightChain && (
+            <div className="hidden lg:flex items-center gap-4 rounded-full border border-border bg-card/40 px-4 py-2">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-[var(--violet)]" />
+                <span className="text-xs text-muted-foreground">Wallet Status</span>
+                <span className="text-xs font-semibold text-white">Connected</span>
+              </div>
+              <div className="h-4 w-px bg-border/50" />
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Balance</span>
+                <span className="text-xs font-semibold text-[var(--violet)]">
+                  {collection.tyiBalance !== null ? `${collection.tyiBalance.toFixed(2)} TYI` : "0.00 TYI"}
+                </span>
+              </div>
+              <div className="h-4 w-px bg-border/50" />
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">ETH</span>
+                <span className="text-xs font-semibold text-white">{ethBalance} ETH</span>
+              </div>
             </div>
           )}
 
