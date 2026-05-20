@@ -64,20 +64,22 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   const payerAddress = await signer.getAddress();
 
   // ── 1. Authenticate ──────────────────────────────────────────────────────────
-  onProgress(10);
+  onProgress(5);
   try {
+    onProgress(15);
     await client.auth.login(signer);
-    onProgress(25);
+    onProgress(30);
   } catch (err) {
     throw new Error(`Authentication failed: ${_msg(err)}`);
   }
 
   // ── 2. Quote — encode claimBadge(recipient, badgeType) ──────────────────────
-  onProgress(30);
+  onProgress(35);
   const iface = new ethers.Interface(CONTRACT_ABI);
   const data  = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
   let quote;
   try {
+    onProgress(40);
     quote = await client.quote.get({
       payer_address: payerAddress.toLowerCase(),
       tx_object: JSON.stringify({
@@ -87,16 +89,17 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
         value: '0x0',
       }),
     });
-    onProgress(50);
+    onProgress(55);
   } catch (err) {
     throw new Error(`Quote failed: ${_msg(err)}`);
   }
 
   // ── 3. Settle — ERC-3009 TYI signature (user pays zero ETH) ─────────────────
-  onProgress(55);
+  onProgress(60);
   try {
+    onProgress(65);
     await client.payment.x402.execute({ quote, signer });
-    onProgress(75);
+    onProgress(80);
   } catch (err) {
     const msg = _msg(err);
     if (/400|insufficient|balance|HTTP 4/i.test(msg)) throw new Error('NO_MOCK_USD');
@@ -104,8 +107,9 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   }
 
   // ── 4. Execute — UGF sponsors ETH, confirms on-chain ────────────────────────
-  onProgress(80);
+  onProgress(85);
   try {
+    onProgress(90);
     const { userTxHash } = await client.chains.evm.sponsorAndExecute(
       quote.digest,
       signer,
