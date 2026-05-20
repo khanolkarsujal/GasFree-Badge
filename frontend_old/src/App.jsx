@@ -32,16 +32,20 @@ import {
 
 import { useWallet } from "@/hooks/useWallet";
 import { useCollection } from "@/hooks/useCollection";
+import { usePlatformAuth } from "@/hooks/usePlatformAuth";
+import { usePlatformWallet } from "@/hooks/usePlatformWallet";
+import { platformApi, DEMO_DONATION_RECIPIENT } from "@/api/platformClient";
 import { executeGaslessClaim, executeGaslessTokenTransfer, getTYIBalance } from "@/services/ugfService";
 import { sessionStore } from "@/services/sessionStore";
 import { BADGES } from "@/lib/constants";
 import { CONTRACT_ADDRESS } from "@/contractConfig";
 import { ClaimModal } from "@/components";
+import { PlatformTopupButton } from "@/components/PlatformTopupButton";
 import { basescanAddress, copyToClipboard } from "@/lib/utils";
 
 const isDeployed = CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000";
 
-function Nav({ wallet, collection }) {
+function Nav({ wallet, collection, platform, platformAuth }) {
   return (
     <header className="relative z-20 border-b border-white/5">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
@@ -70,13 +74,34 @@ function Nav({ wallet, collection }) {
           </a>
         </nav>
         <div className="flex items-center gap-3">
+          {wallet.account && wallet.isRightChain && platform?.platformBalance != null && (
+            <motion.div className="hidden md:flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-xs text-white">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+              <span className="font-semibold">{platform.platformBalance} TYI</span>
+              <span className="text-white/40">wallet</span>
+            </motion.div>
+          )}
           {wallet.account && wallet.isRightChain && collection && (
             <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs text-white">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               <span className="font-semibold text-white/90">
                 {collection.tyiBalance !== null ? `${collection.tyiBalance.toFixed(2)} TYI` : "0.00 TYI"}
               </span>
+              <span className="text-white/40">chain</span>
             </div>
+          )}
+          {wallet.account && wallet.isRightChain && !platformAuth?.isAuthenticated && (
+            <button
+              type="button"
+              onClick={() => platformAuth?.login()}
+              disabled={platformAuth?.loading}
+              className="hidden sm:block rounded-full border border-white/15 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10"
+            >
+              {platformAuth?.loading ? "Signing in…" : "Sign in to wallet"}
+            </button>
+          )}
+          {wallet.account && wallet.isRightChain && platformAuth?.isAuthenticated && (
+            <PlatformTopupButton onSuccess={() => setPlatformTick((t) => t + 1)} />
           )}
           <button
             onClick={
@@ -1574,6 +1599,9 @@ function Footer() {
 export default function App() {
   const wallet = useWallet();
   const collection = useCollection(wallet.account);
+  const platformAuth = usePlatformAuth(wallet.account, wallet.isRightChain);
+  const [platformTick, setPlatformTick] = useState(0);
+  const platform = usePlatformWallet(platformAuth.isAuthenticated, platformTick);
 
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -1654,195 +1682,38 @@ export default function App() {
     };
   }, []);
 
-  // Effect for rolling autonomous AI agent real transactions
+  // Agent demo: educational logs only — no autonomous on-chain transfers (prevents TYI loss)
   useEffect(() => {
-    if (!agentPreauthorized || !agentWalletAddress) {
+    if (!agentPreauthorized) {
       setAgentLogs([]);
       return;
     }
-
-    const provider = getProvider();
-    const agentSigner = sessionStore.getSigner(provider);
-    if (!agentSigner) return;
-
-    const initialLogs = [
-      { time: new Date().toLocaleTimeString(), text: `[Agent] Autonomous agent initialized. Address: ${agentWalletAddress.slice(0, 6)}...${agentWalletAddress.slice(-4)}` },
-      { time: new Date().toLocaleTimeString(), text: "[Agent] Pre-authorized session active. Checking balance..." }
+    const lines = [
+      "[Agent] Demo session active — simulated policy checks only.",
+      "[Agent] Sign in to platform wallet for real P2P transfers via API.",
+      "[Agent] On-chain moves use UGF with explicit user approval per action.",
     ];
-    setAgentLogs(initialLogs);
+    setAgentLogs(lines.map((text) => ({ time: new Date().toLocaleTimeString(), text })));
+    return undefined;
+  }, [agentPreauthorized]);
 
-    getTYIBalance(provider, agentWalletAddress).then(bal => {
-      setAgentBalance(bal ?? 0);
-      setAgentLogs(prev => [
-        ...prev,
-        { time: new Date().toLocaleTimeString(), text: `[Agent] Current balance: ${bal !== null ? bal.toFixed(4) : "0"} TYI.` }
-      ]);
-    });
-
-    const agentActions = [
-      {
-        desc: "DeFi Yield Router rebalance",
-        amount: "0.02",
-        to: CONTRACT_ADDRESS,
-        logStart: "Scanning Base Sepolia yield vaults...",
-        logPreTx: "Yield opportunity found! Routing 0.02 TYI to GasFreeBadge Vault...",
-        logSuccess: "Yield routed successfully! Harvested rewards on-chain."
-      },
-      {
-        desc: "Arbitrage Execution",
-        amount: "0.01",
-        to: CONTRACT_ADDRESS,
-        logStart: "Sensed 0.5% price discrepancy on mock Uniswap pair...",
-        logPreTx: "Executing gasless arbitrage trade for 0.01 TYI...",
-        logSuccess: "Arbitrage completed. Captured +0.03 TYI on-chain yield."
-      },
-      {
-        desc: "Liquidity Re-allocation",
-        amount: "0.03",
-        to: CONTRACT_ADDRESS,
-        logStart: "Analyzing stablecoin lending pool rates on Base Sepolia...",
-        logPreTx: "Re-allocating 0.03 TYI to high-yield pool...",
-        logSuccess: "Collateral optimized. Yield generation active."
-      }
-    ];
-
-    let counter = 0;
-    const interval = setInterval(async () => {
-      const action = agentActions[counter % agentActions.length];
-      counter++;
-
-      setAgentLogs(prev => [
-        ...prev,
-        { time: new Date().toLocaleTimeString(), text: `[Agent] ${action.logStart}` },
-        { time: new Date().toLocaleTimeString(), text: `[Agent] ${action.logPreTx}` }
-      ].slice(-10));
-
-      try {
-        if (!isTabVisible) return;
-        const bal = await getTYIBalance(provider, agentWalletAddress);
-        setAgentBalance(bal ?? 0);
-
-        if (bal === null || bal < parseFloat(action.amount)) {
-          setAgentLogs(prev => [
-            ...prev,
-            { time: new Date().toLocaleTimeString(), text: `[Agent Error] Insufficient balance (${bal !== null ? bal.toFixed(4) : "0"} TYI). Please fund the agent.` }
-          ].slice(-10));
-          return;
-        }
-
-        const activeSigner = sessionStore.getSigner(provider);
-        if (!activeSigner) return;
-
-        const txHash = await executeGaslessTokenTransfer(
-          activeSigner,
-          action.to,
-          action.amount,
-          (step) => {
-            if (step === 1) {
-              setAgentLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), text: `[Agent] Auth: Signing EIP-191 session...` }].slice(-10));
-            } else if (step === 3) {
-              setAgentLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), text: `[Agent] Settle: Signing ERC-3009 transfer...` }].slice(-10));
-            } else if (step === 4) {
-              setAgentLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), text: `[Agent] Execute: Submitting to Base Sepolia...` }].slice(-10));
-            }
-          }
-        );
-
-        setAgentLogs(prev => [
-          ...prev,
-          {
-            time: new Date().toLocaleTimeString(),
-            text: `[Agent Success] ${action.logSuccess} Tx: ${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
-            txHash
-          }
-        ].slice(-10));
-
-        const newBal = await getTYIBalance(provider, agentWalletAddress);
-        setAgentBalance(newBal ?? 0);
-        collection.refresh(wallet.account);
-      } catch (err) {
-        console.error("Agent automation error:", err);
-        setAgentLogs(prev => [
-          ...prev,
-          { time: new Date().toLocaleTimeString(), text: `[Agent Error] Failed execution: ${err.message || err}` }
-        ].slice(-10));
-      }
-    }, 25000);
-
-    return () => clearInterval(interval);
-  }, [agentPreauthorized, agentWalletAddress, isTabVisible]);
-
-  // Effect for automated subscription billing cycles
+  // Subscription demo — platform ledger only (no on-chain TYI burn)
   useEffect(() => {
-    if (!subscriptionEnabled || !agentWalletAddress) return;
-
-    const provider = getProvider();
+    if (!subscriptionEnabled) return;
 
     const billingInterval = setInterval(async () => {
       if (!isTabVisible) return;
-      const activeSigner = sessionStore.getSigner(provider);
-      if (!activeSigner) return;
-
-      setSimActive(true);
-      setSimStep(1);
-      setSimSuccess(false);
-      setSimTxHash("");
-      setSimError("");
-
-      const logs = [];
-      const addLog = (msg) => {
-        logs.push({ time: new Date().toLocaleTimeString(), text: msg });
-        setSimLogs([...logs]);
-      };
-
-      addLog(`[Subscription Relayer] Automated renewal cycle triggered for API Hub Plan ($9.99/mo)...`);
-      addLog(`[Subscription Relayer] Debiting 0.05 TYI (scaled down for demo) from agent session wallet...`);
-
-      try {
-        const bal = await getTYIBalance(provider, agentWalletAddress);
-        if (bal === null || bal < 0.05) {
-          throw new Error("Pre-authorized Agent Wallet has insufficient balance to cover subscription renewal.");
-        }
-
-        const txHash = await executeGaslessTokenTransfer(
-          activeSigner,
-          CONTRACT_ADDRESS,
-          "0.05",
-          (step) => {
-            setSimStep(step);
-            if (step === 1) {
-              addLog(`[Step 1/4: Auth] Authenticating Agent Wallet session...`);
-            } else if (step === 2) {
-              addLog(`[Step 2/4: Quote] Encoding transfer and requesting oracle gas quote...`);
-            } else if (step === 3) {
-              addLog(`[Step 3/4: Settle] Signing ERC-3009 settlement from Agent Wallet...`);
-            } else if (step === 4) {
-              addLog(`[Step 4/4: Execute] Broad-casting tx to Base Sepolia node...`);
-            }
-          }
-        );
-
-        setSimTxHash(txHash);
-        addLog(`[Step 4/4: Execute] Subscription renewal charge successfully mined on-chain!`);
-        addLog(`[Tx Hash] ${txHash}`);
-        setSimSuccess(true);
-        setSimStep(5);
-        setSimActive(false);
-
-        const newBal = await getTYIBalance(provider, agentWalletAddress);
-        setAgentBalance(newBal ?? 0);
-        collection.refresh(wallet.account);
-      } catch (err) {
-        console.error("Subscription renewal error:", err);
-        addLog(`[Subscription Error] Renewal charge failed: ${err.message || err}`);
-        setSimError(err.message || String(err));
-        setSimActive(false);
-        setSimStep(0);
-      }
+      const line = platformAuth.isAuthenticated
+        ? "[Subscription] Demo renewal logged — configure real billing via POST /v1/payment_intents"
+        : "[Subscription] Sign in to platform wallet to enable ledger-based billing";
+      setAgentLogs((prev) => [
+        ...prev,
+        { time: new Date().toLocaleTimeString(), text: line },
+      ].slice(-8));
     }, 45000);
 
     return () => clearInterval(billingInterval);
-  }, [subscriptionEnabled, agentWalletAddress, isTabVisible]);
+  }, [subscriptionEnabled, isTabVisible, platformAuth.isAuthenticated]);
 
   const handleDeactivateAgent = async () => {
     const provider = getProvider();
@@ -2034,21 +1905,55 @@ export default function App() {
       setSimLogs([...logs]);
     };
 
-    // ── Real On-Chain UGF Path ────────────────────────────────────────────────
+    // ── Platform wallet (Formance ledger) — instant P2P / bill pay ─────────────
+    if (platformAuth.isAuthenticated && wallet.account && wallet.isRightChain) {
+      addLog(`[Platform] Processing ${type} via Formance ledger...`);
+      try {
+        if (type === "Transfer") {
+          if (!transferRecipient || !transferAmount) throw new Error("Recipient and amount required.");
+          await platform.sendMoney(transferRecipient, transferAmount, details);
+          addLog(`[Platform] Sent ${transferAmount} TYI to ${transferRecipient.slice(0, 10)}...`);
+        } else if (type === "Donation") {
+          const amt = donationAmount || "10";
+          await platform.sendMoney(DEMO_DONATION_RECIPIENT, amt, `Donation: ${details}`);
+          addLog(`[Platform] Donation ${amt} TYI recorded on ledger.`);
+        } else if (type === "Checkout") {
+          await platformApi.billPay("m_gasfree", "15", "checkout-demo");
+          addLog(`[Platform] Checkout paid via merchant m_gasfree.`);
+          setPaymentCompleted(true);
+        } else {
+          addLog(`[Platform] ${type} — use Transfer or Checkout for ledger payments.`);
+        }
+        setSimSuccess(true);
+        setSimStep(5);
+        setSimActive(false);
+        setPlatformTick((t) => t + 1);
+        collection.refresh(wallet.account);
+        return;
+      } catch (err) {
+        addLog(`[Platform Error] ${err.message || err}`);
+        setSimError(err.message || String(err));
+        setSimActive(false);
+        setSimStep(0);
+        return;
+      }
+    }
+
+    // ── Real On-Chain UGF Path (TYI token transfers only — never to NFT contract) ─
     if (wallet.account && wallet.isRightChain) {
-      addLog(`[UGF Client] Initializing REAL on-chain transaction for ${type} (${details})...`);
+      addLog(`[UGF Client] Initializing on-chain TYI transfer for ${type} (${details})...`);
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
 
-        let recipientAddress = CONTRACT_ADDRESS;
+        let recipientAddress = wallet.account;
         let transferVal = "1";
 
         if (type === "Donation") {
-          recipientAddress = CONTRACT_ADDRESS;
+          recipientAddress = DEMO_DONATION_RECIPIENT;
           transferVal = donationAmount || "10";
         } else if (type === "Checkout") {
-          recipientAddress = CONTRACT_ADDRESS;
+          recipientAddress = DEMO_DONATION_RECIPIENT;
           transferVal = "15";
         } else if (type === "Transfer") {
           if (!transferRecipient || !transferAmount) {
@@ -2063,8 +1968,8 @@ export default function App() {
           recipientAddress = wallet.account;
           transferVal = "0.01";
         } else if (type === "Subscription Permit") {
-          recipientAddress = CONTRACT_ADDRESS;
-          transferVal = "5"; // 5 TYI setup
+          recipientAddress = wallet.account;
+          transferVal = "5";
         }
 
         addLog(`[Step 1/4: Auth] Requesting EIP-191 signature for wallet session login...`);
@@ -2176,6 +2081,14 @@ export default function App() {
       setTxHash(hash);
       setActiveStep(5);
       await collection.refresh(wallet.account);
+      if (platformAuth.isAuthenticated) {
+        try {
+          await platformApi.badgeRecord(hash, badge.id);
+          setPlatformTick((t) => t + 1);
+        } catch {
+          /* ledger record optional if API down */
+        }
+      }
     } catch (err) {
       const msg = err?.message ?? String(err);
       const mapped =
@@ -2206,7 +2119,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative selection:bg-indigo-500/30 selection:text-indigo-100 overflow-x-hidden">
-      <Nav wallet={wallet} collection={collection} />
+      <Nav wallet={wallet} collection={collection} platform={platform} platformAuth={platformAuth} />
 
       <main>
         <Hero

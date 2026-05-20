@@ -31,6 +31,10 @@ contract GasFreeBadge is ERC721, Ownable, ReentrancyGuard {
     // Token ID -> Badge Type (0 = Explorer, 1 = Builder, 2 = Pioneer)
     mapping(uint256 => uint8) public tokenBadgeType;
 
+    /// @dev When true, only owner or authorized callers (e.g. UGF relayer) may call claimBadge.
+    bool public restrictCallers;
+    mapping(address => bool) public authorizedCallers;
+
     // ─── Events ───────────────────────────────────────────────────────────────
     event BadgeClaimed(address indexed recipient, uint256 indexed tokenId, uint8 indexed badgeType);
     event Paused(bool status);
@@ -40,6 +44,7 @@ contract GasFreeBadge is ERC721, Ownable, ReentrancyGuard {
     error ZeroAddress();
     error ContractPaused();
     error InvalidBadgeType();
+    error UnauthorizedCaller();
 
     // ─── Constructor ──────────────────────────────────────────────────────────
     constructor(
@@ -50,6 +55,13 @@ contract GasFreeBadge is ERC721, Ownable, ReentrancyGuard {
         Ownable(initialOwner)
     {
         _baseTokenURI = baseTokenURI;
+    }
+
+    modifier onlyAuthorizedCaller() {
+        if (restrictCallers && !authorizedCallers[msg.sender] && msg.sender != owner()) {
+            revert UnauthorizedCaller();
+        }
+        _;
     }
 
     // ─── Core Gasless Claim (UGF-native) ─────────────────────────────────────
@@ -65,6 +77,7 @@ contract GasFreeBadge is ERC721, Ownable, ReentrancyGuard {
     function claimBadge(address recipient, uint8 badgeType)
         external
         nonReentrant
+        onlyAuthorizedCaller
         returns (uint256)
     {
         if (paused)                          revert ContractPaused();
@@ -102,6 +115,15 @@ contract GasFreeBadge is ERC721, Ownable, ReentrancyGuard {
 
     function setBaseURI(string calldata newBaseURI) external onlyOwner {
         _baseTokenURI = newBaseURI;
+    }
+
+    function setRestrictCallers(bool enabled) external onlyOwner {
+        restrictCallers = enabled;
+    }
+
+    function setAuthorizedCaller(address caller, bool allowed) external onlyOwner {
+        if (caller == address(0)) revert ZeroAddress();
+        authorizedCallers[caller] = allowed;
     }
 
     // ─── Overrides ────────────────────────────────────────────────────────────

@@ -80,27 +80,18 @@ sequenceDiagram
 
 ## 📁 Project Architecture
 
-The repository is divided into two primary workspaces: the **Smart Contracts** root and the **Frontend App** workspace.
+Integrated monorepo — see **[SETUP.md](./SETUP.md)** for full stack instructions.
 
 ```text
 NFT Blockchain project/
-├── contracts/                  # Solidity Smart Contracts
-│   └── GasFreeBadge.sol        # ERC-721 contract with paused/unpaused & badge types
-├── scripts/                    # Hardhat Deployment & Verification scripts
-│   ├── deploy.js               # Deploys contract and auto-writes config to frontend
-│   └── interact.js             # Basic contract interaction verification
-├── frontend/                   # Frontend React App (Vite)
-│   ├── src/
-│   │   ├── App.jsx             # Main interactive dashboard with playgrounds
-│   │   ├── abi.json            # Contract ABI
-│   │   ├── contractConfig.js   # Deployed contract metadata
-│   │   ├── components/         # Modular layout, hero, badge, & collection components
-│   │   ├── hooks/              # Wallet state and collection tracking hooks
-│   │   └── services/
-│   │       ├── ugfService.js   # UGF Client initialization & gasless claim/transfer methods
-│   │       └── sessionStore.js # Safe, in-memory ephemeral keypair store
-│   └── tailwind.config.js      # Custom theme, typography, & animations
-└── package.json                # Root package configuration
+├── contracts/           # GasFreeBadge.sol, TyiWallet.sol
+├── platform/            # Production API (NestJS + Formance + PostgreSQL)
+│   ├── docker-compose.yml
+│   └── api/             # Stripe-style /v1 REST + SIWE
+├── frontend/            # React app — wallet, UGF claims, platform payments
+│   └── src/api/platformClient.js
+├── scripts/             # deploy.js, deploy-wallet.js, interact.js
+└── backend/             # (legacy) Fastify v1 — use platform/ instead
 ```
 
 ---
@@ -137,12 +128,20 @@ cd frontend
 npm install
 ```
 
-### 3. Run the Frontend App
-Launch the local dev server using Vite:
+### 3. Start Platform API (payments wallet)
+
 ```bash
-npm run dev
+cd platform && cp .env.example .env && docker compose up -d
+cd api && npm install && npx prisma migrate deploy && npm run start:dev
 ```
-Open your browser and navigate to `http://localhost:5173`.
+
+### 4. Run the Frontend App
+
+```bash
+cd frontend && cp .env.example .env && npm install && npm run dev
+```
+
+Open http://localhost:5173 — connect wallet, **Sign in to wallet**, then use Send/Donate/Claim.
 
 ---
 

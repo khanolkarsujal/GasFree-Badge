@@ -1,0 +1,164 @@
+// Stripe-inspired metadata layer — balances live in Formance Ledger
+// References: docs.stripe.com/api (PaymentIntent, Transfer, BalanceTransaction)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id            String   @id @default(cuid())
+  walletAddress String   @unique @map("wallet_address")
+  email         String?
+  name          String?
+  metadata      Json?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  paymentIntents PaymentIntent[]
+  transfers      Transfer[]
+  payouts        Payout[]
+  balanceTxns    BalanceTransaction[]
+
+  @@map("customers")
+}
+
+enum PaymentIntentStatus {
+  requires_payment_method
+  requires_confirmation
+  requires_action
+  processing
+  succeeded
+  canceled
+}
+
+model PaymentIntent {
+  id              String              @id @default(cuid())
+  customerId      String              @map("customer_id")
+  amount          Decimal             @db.Decimal(36, 18)
+  currency        String              @default("tyi")
+  status          PaymentIntentStatus @default(requires_payment_method)
+  description     String?
+  metadata        Json?
+  idempotencyKey  String?             @unique @map("idempotency_key")
+  clientSecret    String              @unique @map("client_secret")
+  ledgerTxnId     String?             @map("ledger_txn_id")
+  chainTxHash     String?             @map("chain_tx_hash")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId, createdAt(sort: Desc)])
+  @@map("payment_intents")
+}
+
+enum TransferStatus {
+  pending
+  paid
+  failed
+  canceled
+}
+
+model Transfer {
+  id             String         @id @default(cuid())
+  customerId     String         @map("customer_id")
+  amount         Decimal        @db.Decimal(36, 18)
+  currency       String         @default("tyi")
+  destination    String
+  description    String?
+  status         TransferStatus @default(pending)
+  idempotencyKey String?        @unique @map("idempotency_key")
+  ledgerTxnId    String?        @map("ledger_txn_id")
+  metadata       Json?
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@map("transfers")
+}
+
+enum PayoutStatus {
+  pending
+  in_transit
+  paid
+  failed
+  canceled
+}
+
+model Payout {
+  id             String       @id @default(cuid())
+  customerId     String       @map("customer_id")
+  amount         Decimal      @db.Decimal(36, 18)
+  currency       String       @default("tyi")
+  status         PayoutStatus @default(pending)
+  destination    String?
+  idempotencyKey String?      @unique @map("idempotency_key")
+  ledgerTxnId    String?      @map("ledger_txn_id")
+  arrivalDate    DateTime?    @map("arrival_date")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@map("payouts")
+}
+
+model BalanceTransaction {
+  id          String   @id @default(cuid())
+  customerId  String   @map("customer_id")
+  amount      Decimal  @db.Decimal(36, 18)
+  net         Decimal  @db.Decimal(36, 18)
+  fee         Decimal  @default(0) @db.Decimal(36, 18)
+  currency    String   @default("tyi")
+  type        String
+  status      String   @default("available")
+  description String?
+  sourceId    String?  @map("source_id")
+  sourceType  String?  @map("source_type")
+  ledgerTxnId String?  @map("ledger_txn_id")
+  chainTxHash String?  @map("chain_tx_hash")
+  availableOn DateTime @default(now()) @map("available_on")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId, createdAt(sort: Desc)])
+  @@map("balance_transactions")
+}
+
+model WebhookEndpoint {
+  id         String   @id @default(cuid())
+  customerId String   @map("customer_id")
+  url        String
+  secret     String
+  events     String[]
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("webhook_endpoints")
+}
+
+model AuthNonce {
+  address   String   @id
+  nonce     String
+  expiresAt DateTime @map("expires_at")
+
+  @@map("auth_nonces")
+}
+
+model IdempotencyRecord {
+  key       String   @id
+  response  Json
+  status    Int
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+
+  @@map("idempotency_records")
+}
