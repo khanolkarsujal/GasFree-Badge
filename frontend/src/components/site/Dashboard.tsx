@@ -76,14 +76,14 @@ export function Dashboard({ wallet, collection, paymentCompleted, simStep, simAc
                   <span>Progress</span>
                   <span>{paymentCompleted ? "100%" : `${Math.round(progress)}%`}</span>
                 </div>
-                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                <div className="h-3 rounded-full bg-white/20 overflow-hidden border border-border/30">
                   <div 
                     className={`h-full rounded-full transition-all duration-300 ease-out ${
                       paymentCompleted 
-                        ? "bg-emerald-500" 
+                        ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
                         : progress > 0 || simActive
-                          ? "bg-gradient-to-r from-[var(--violet)] to-[var(--pink)]" 
-                          : "bg-white/30"
+                          ? "bg-gradient-to-r from-[var(--violet)] to-[var(--pink)] shadow-[0_0_15px_rgba(139,92,246,0.5)]" 
+                          : "bg-white/40"
                     }`}
                     style={{ width: `${paymentCompleted ? 100 : Math.max(progress, 5)}%` }}
                   />
