@@ -81,11 +81,11 @@ export function Dashboard({ wallet, collection, paymentCompleted, simStep, simAc
                     className={`h-full rounded-full transition-all duration-300 ease-out ${
                       paymentCompleted 
                         ? "bg-emerald-500" 
-                        : simActive 
+                        : progress > 0 || simActive
                           ? "bg-gradient-to-r from-[var(--violet)] to-[var(--pink)]" 
-                          : "bg-white/20"
+                          : "bg-white/30"
                     }`}
-                    style={{ width: `${paymentCompleted ? 100 : progress}%` }}
+                    style={{ width: `${paymentCompleted ? 100 : Math.max(progress, 5)}%` }}
                   />
                 </div>
               </div>
