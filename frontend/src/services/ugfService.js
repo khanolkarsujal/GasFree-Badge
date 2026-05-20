@@ -11,6 +11,16 @@ const CONTRACT_ABI = [
   'event BadgeClaimed(address indexed recipient, uint256 indexed tokenId, uint8 indexed badgeType)',
 ];
 
+// Cache UGF client instance
+let cachedUGFClient = null;
+
+function getUGFClient() {
+  if (!cachedUGFClient) {
+    cachedUGFClient = new UGFClient();
+  }
+  return cachedUGFClient;
+}
+
 // ── Public data functions ──────────────────────────────────────────────────────
 
 export async function getCollectionStats(provider) {
@@ -60,11 +70,16 @@ export async function getClaimedBadges(provider, address) {
  * @returns {Promise<string>}       Confirmed on-chain tx hash
  */
 export async function executeGaslessClaim(signer, badgeType, onProgress = () => {}) {
-  const client       = new UGFClient();
-  const payerAddress = await signer.getAddress();
+  const client       = getUGFClient();
+  
+  // Parallelize independent operations
+  const [payerAddress] = await Promise.all([
+    signer.getAddress(),
+  ]);
+
+  onProgress(5);
 
   // ── 1. Authenticate ──────────────────────────────────────────────────────────
-  onProgress(5);
   try {
     onProgress(15);
     await client.auth.login(signer);
