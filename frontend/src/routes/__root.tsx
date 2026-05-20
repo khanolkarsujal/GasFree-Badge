@@ -75,11 +75,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Gaslessio" },
       { name: "description", content: "Onchain actions. Zero gas friction." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Gaslessio" },
+      { property: "og:description", content: "Onchain actions. Zero gas friction." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Gaslessio" },
+      { name: "twitter:description", content: "Onchain actions. Zero gas friction." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/293da11a-f40b-47b6-8b42-10a454041691/id-preview-22528457--80125c4b-d25e-4715-bbde-8f205181330a.lovable.app-1779243398144.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/293da11a-f40b-47b6-8b42-10a454041691/id-preview-22528457--80125c4b-d25e-4715-bbde-8f205181330a.lovable.app-1779243398144.png" },
     ],
     links: [
       {
