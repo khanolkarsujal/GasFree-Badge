@@ -28,3 +28,13 @@ deployments/
 .DS_Store
 *.log
 *.zip
+
+# Deployment - exclude unnecessary directories
+backend/
+platform/
+contracts/
+scripts/
+test/
+frontend_old/
+hardhat.config.js
+package-lock.json
