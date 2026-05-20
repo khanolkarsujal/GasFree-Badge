@@ -102,6 +102,7 @@ function Index() {
           onMint={handleMint}
           isMinting={isMinting}
           mintSuccess={mintSuccess}
+          progress={progress}
         />
         <Dashboard
           wallet={wallet}

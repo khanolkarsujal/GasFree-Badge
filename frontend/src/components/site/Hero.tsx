@@ -9,9 +9,10 @@ interface HeroProps {
   onMint?: (badgeType?: number) => Promise<void>;
   isMinting?: boolean;
   mintSuccess?: boolean;
+  progress?: number;
 }
 
-export function Hero({ wallet, collection, onMint, isMinting, mintSuccess }: HeroProps) {
+export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progress }: HeroProps) {
   const [ethBalance, setEthBalance] = useState<string>("0.00");
 
   useEffect(() => {
@@ -90,6 +91,22 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess }: Her
               <Github className="w-4 h-4" /> GitHub
             </a>
           </div>
+
+          {/* Progress Bar */}
+          {isMinting && (
+            <div className="mt-6 w-full max-w-md">
+              <div className="flex justify-between text-xs text-muted-foreground mb-2">
+                <span>Transaction Progress</span>
+                <span>{Math.round(progress || 0)}%</span>
+              </div>
+              <div className="h-4 rounded-full bg-white/20 overflow-hidden border border-border/30">
+                <div 
+                  className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-[var(--violet)] to-[var(--pink)] shadow-[0_0_15px_rgba(139,92,246,0.5)]"
+                  style={{ width: `${Math.max(progress || 0, 5)}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="mt-12 grid grid-cols-3 gap-6 pt-8 border-t border-border/60 max-w-md">
             <Stat label="Gas Cost" value="0 ETH" accent />
