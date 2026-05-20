@@ -43,9 +43,6 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
 
   return (
     <section className="relative pt-32 pb-24 overflow-hidden">
-      {isMinting && (
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-0 pointer-events-none" />
-      )}
       <div className="absolute inset-0 bg-glow-radial pointer-events-none" />
       <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-12 items-center relative">
         {/* Left Column */}
@@ -96,37 +93,53 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
             </a>
           </div>
 
-          {/* Progress Bar */}
-          {isMinting && (
-            <div className="mt-6 w-full max-w-md relative z-50">
-              <div className="rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 p-6 shadow-[0_0_60px_rgba(139,92,246,0.4)]">
-                <div className="flex justify-between text-sm font-semibold text-white mb-3">
-                  <span>Transaction Progress</span>
-                  <span>{Math.round(progress || 0)}%</span>
-                </div>
-                <div className="h-8 rounded-full bg-white/10 overflow-hidden border-2 border-white/30 relative">
-                  <div 
-                    className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-emerald-500 shadow-[0_0_30px_rgba(139,92,246,0.8)] animate-pulse"
-                    style={{ width: `${Math.max(progress || 0, 5)}%` }}
-                  />
-                </div>
-                <div className="mt-3 text-xs text-muted-foreground text-center">
-                  {(progress || 0) < 25 && "Authenticating wallet..."}
-                  {(progress || 0) >= 25 && (progress || 0) < 50 && "Getting transaction quote..."}
-                  {(progress || 0) >= 50 && (progress || 0) < 75 && "Settling payment..."}
-                  {(progress || 0) >= 75 && (progress || 0) < 100 && "Executing transaction..."}
-                  {(progress || 0) === 100 && "Transaction complete!"}
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="mt-12 grid grid-cols-3 gap-6 pt-8 border-t border-border/60 max-w-md">
             <Stat label="Gas Cost" value="0 ETH" accent />
             <Stat label="Network" value="Base Sepolia" />
             <Stat label="Settlement" value="Mock USD" />
           </div>
         </div>
+
+        {/* Loading Modal */}
+        {isMinting && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="relative bg-black/60 backdrop-blur-xl border border-white/20 rounded-3xl p-8 max-w-md w-full shadow-[0_0_80px_rgba(139,92,246,0.5)] animate-in zoom-in duration-300">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-emerald-500 flex items-center justify-center mb-6 animate-pulse">
+                  <Zap className="w-8 h-8 text-white" />
+                </div>
+                
+                <h3 className="font-display font-bold text-2xl text-white mb-2">
+                  Processing Transaction
+                </h3>
+                
+                <p className="text-sm text-muted-foreground mb-6">
+                  Please wait while we process your transaction on Base Sepolia.
+                </p>
+                
+                <div className="w-full">
+                  <div className="flex justify-between text-sm font-semibold text-white mb-3">
+                    <span>Transaction Progress</span>
+                    <span>{Math.round(progress || 0)}%</span>
+                  </div>
+                  <div className="h-8 rounded-full bg-white/10 overflow-hidden border-2 border-white/30 relative">
+                    <div 
+                      className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-emerald-500 shadow-[0_0_30px_rgba(139,92,246,0.8)] animate-pulse"
+                      style={{ width: `${Math.max(progress || 0, 5)}%` }}
+                    />
+                  </div>
+                  <div className="mt-3 text-xs text-muted-foreground text-center">
+                    {(progress || 0) < 25 && "Authenticating wallet..."}
+                    {(progress || 0) >= 25 && (progress || 0) < 50 && "Getting transaction quote..."}
+                    {(progress || 0) >= 50 && (progress || 0) < 75 && "Settling payment..."}
+                    {(progress || 0) >= 75 && (progress || 0) < 100 && "Executing transaction..."}
+                    {(progress || 0) === 100 && "Transaction complete!"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Success Modal */}
         {mintSuccess && txHash && (
