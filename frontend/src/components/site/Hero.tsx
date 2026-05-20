@@ -42,7 +42,7 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
   const isConnected = !!(wallet.account && wallet.isRightChain);
 
   return (
-    <section className="relative pt-32 pb-24 overflow-hidden">
+    <section className={`relative pt-32 pb-24 overflow-hidden transition-all duration-300 ${isMinting ? 'blur-sm' : ''}`}>
       <div className="absolute inset-0 bg-glow-radial pointer-events-none" />
       <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-12 items-center relative">
         {/* Left Column */}
@@ -53,12 +53,12 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
           </div>
 
           <h1 className="mt-7 font-display font-bold text-5xl md:text-6xl lg:text-7xl leading-[1.02] tracking-tight">
-            SaaS Dev License.<br />
-            <span className="text-gradient-violet">Gasless checkout.</span>
+            Pay gas with<br />
+            Mock USD. <span className="text-gradient-violet">No ETH needed.</span>
           </h1>
 
           <p className="mt-6 text-muted-foreground text-base max-w-md leading-relaxed">
-            Purchase your SaaS Developer License with zero gas fees. Powered by Universal Gas Framework on Base Sepolia — pay with Mock USD, no ETH required.
+            A beginner-friendly dApp on Base Sepolia powered by the Universal Gas Framework. Skip the ETH funding step — sign in, act on-chain, and let UGF settle your gas in Mock USD.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -70,15 +70,15 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
               >
                 {mintSuccess ? (
                   <>
-                    <Zap className="w-4 h-4 text-emerald-600" /> Purchased!
+                    <Zap className="w-4 h-4 text-emerald-600" /> Badge Minted!
                   </>
                 ) : isMinting ? (
                   <>
-                    <Zap className="w-4 h-4 text-[var(--violet)] animate-spin" /> Processing...
+                    <Zap className="w-4 h-4 text-[var(--violet)] animate-spin" /> Minting...
                   </>
                 ) : (
                   <>
-                    <Zap className="w-4 h-4 text-[var(--violet)]" /> Payments & Checkout
+                    <Zap className="w-4 h-4 text-[var(--violet)]" /> Mint Badge
                   </>
                 )}
               </button>
@@ -95,9 +95,9 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
 
           {/* Progress Bar */}
           {isMinting && (
-            <div className="mt-6 w-full max-w-md">
+            <div className="mt-6 w-full max-w-md relative z-10">
               <div className="flex justify-between text-sm font-semibold text-white mb-2">
-                <span>Checkout Progress</span>
+                <span>Transaction Progress</span>
                 <span>{Math.round(progress || 0)}%</span>
               </div>
               <div className="h-6 rounded-full bg-white/10 overflow-hidden border-2 border-border/50 relative">
@@ -108,18 +108,18 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
               </div>
               <div className="mt-2 text-xs text-muted-foreground text-center">
                 {(progress || 0) < 25 && "Authenticating wallet..."}
-                {(progress || 0) >= 25 && (progress || 0) < 50 && "Processing payment..."}
-                {(progress || 0) >= 50 && (progress || 0) < 75 && "Settling transaction..."}
-                {(progress || 0) >= 75 && (progress || 0) < 100 && "Finalizing purchase..."}
-                {(progress || 0) === 100 && "Purchase complete!"}
+                {(progress || 0) >= 25 && (progress || 0) < 50 && "Getting transaction quote..."}
+                {(progress || 0) >= 50 && (progress || 0) < 75 && "Settling payment..."}
+                {(progress || 0) >= 75 && (progress || 0) < 100 && "Executing transaction..."}
+                {(progress || 0) === 100 && "Transaction complete!"}
               </div>
             </div>
           )}
 
           <div className="mt-12 grid grid-cols-3 gap-6 pt-8 border-t border-border/60 max-w-md">
-            <Stat label="Price" value="$15.00" accent />
+            <Stat label="Gas Cost" value="0 ETH" accent />
             <Stat label="Network" value="Base Sepolia" />
-            <Stat label="Payment" value="Mock USD" />
+            <Stat label="Settlement" value="Mock USD" />
           </div>
         </div>
 
@@ -140,11 +140,11 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
                 </div>
                 
                 <h3 className="font-display font-bold text-2xl text-white mb-2">
-                  Purchase Successful!
+                  Badge Minted Successfully!
                 </h3>
                 
                 <p className="text-sm text-muted-foreground mb-6">
-                  Your SaaS Developer License has been purchased on Base Sepolia.
+                  Your GasFree Badge has been minted on Base Sepolia.
                 </p>
                 
                 <div className="w-full space-y-4">
