@@ -95,13 +95,19 @@ export async function getClaimedBadges(provider, address) {
  * @returns {Promise<string>}       Confirmed on-chain tx hash
  */
 export async function executeGaslessClaim(signer, badgeType, onProgress = () => {}) {
+  const startTime = performance.now();
   const client       = getUGFClient();
+  const clientTime = performance.now();
+  console.log(`[Timing] UGF client init: ${(clientTime - startTime).toFixed(2)}ms`);
+  
   const iface        = getContractInterface();
   
   // Ultra-fast parallel initialization
   const [payerAddress] = await Promise.all([
     signer.getAddress(),
   ]);
+  const addressTime = performance.now();
+  console.log(`[Timing] Address fetch: ${(addressTime - clientTime).toFixed(2)}ms`);
 
   // Use cached encoded data if available, otherwise encode now
   let data = cachedEncodedData;
@@ -110,6 +116,8 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
     cachedEncodedData = data;
     cachedPayerAddress = payerAddress;
   }
+  const encodeTime = performance.now();
+  console.log(`[Timing] Data encode: ${(encodeTime - addressTime).toFixed(2)}ms`);
 
   // Continuous non-stop progress from 0%
   let progress = 0;
@@ -121,14 +129,18 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   }, 150);
 
   // ── 1. Authenticate ──────────────────────────────────────────────────────────
+  const authStart = performance.now();
   try {
     await client.auth.login(signer);
+    const authTime = performance.now();
+    console.log(`[Timing] Auth: ${(authTime - authStart).toFixed(2)}ms`);
   } catch (err) {
     clearInterval(progressInterval);
     throw new Error(`Authentication failed: ${_msg(err)}`);
   }
 
   // ── 2. Quote — encode claimBadge(recipient, badgeType) ──────────────────────
+  const quoteStart = performance.now();
   let quote;
   try {
     quote = await client.quote.get({
@@ -140,14 +152,19 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
         value: '0x0',
       }),
     });
+    const quoteTime = performance.now();
+    console.log(`[Timing] Quote: ${(quoteTime - quoteStart).toFixed(2)}ms`);
   } catch (err) {
     clearInterval(progressInterval);
     throw new Error(`Quote failed: ${_msg(err)}`);
   }
 
   // ── 3. Settle — ERC-3009 TYI signature (user pays zero ETH) ─────────────────
+  const settleStart = performance.now();
   try {
     await client.payment.x402.execute({ quote, signer });
+    const settleTime = performance.now();
+    console.log(`[Timing] Settle: ${(settleTime - settleStart).toFixed(2)}ms`);
   } catch (err) {
     clearInterval(progressInterval);
     const msg = _msg(err);
@@ -156,12 +173,16 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   }
 
   // ── 4. Execute — UGF sponsors ETH, confirms on-chain ────────────────────────
+  const executeStart = performance.now();
   try {
     const { userTxHash } = await client.chains.evm.sponsorAndExecute(
       quote.digest,
       signer,
       async () => ({ to: CONTRACT_ADDRESS.toLowerCase(), data, value: 0n })
     );
+    const executeTime = performance.now();
+    console.log(`[Timing] Execute: ${(executeTime - executeStart).toFixed(2)}ms`);
+    console.log(`[Timing] Total UGF: ${(executeTime - startTime).toFixed(2)}ms`);
     clearInterval(progressInterval);
     onProgress(100);
     return userTxHash;
