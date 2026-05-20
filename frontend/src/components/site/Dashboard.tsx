@@ -8,9 +8,10 @@ interface DashboardProps {
   paymentCompleted: boolean;
   simStep: number;
   simActive: boolean;
+  progress: number;
 }
 
-export function Dashboard({ wallet, collection, paymentCompleted, simStep, simActive }: DashboardProps) {
+export function Dashboard({ wallet, collection, paymentCompleted, simStep, simActive, progress }: DashboardProps) {
   const [ethBalance, setEthBalance] = useState("0.00");
   const isConnected = !!(wallet.account && wallet.isRightChain);
 
@@ -73,18 +74,18 @@ export function Dashboard({ wallet, collection, paymentCompleted, simStep, simAc
               <div className="mt-2">
                 <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
                   <span>Progress</span>
-                  <span>{paymentCompleted ? "100%" : `${Math.min(simStep * 25, 100)}%`}</span>
+                  <span>{paymentCompleted ? "100%" : `${Math.round(progress)}%`}</span>
                 </div>
                 <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                   <div 
-                    className={`h-full rounded-full transition-all duration-500 ${
+                    className={`h-full rounded-full transition-all duration-300 ease-out ${
                       paymentCompleted 
                         ? "bg-emerald-500" 
                         : simActive 
                           ? "bg-gradient-to-r from-[var(--violet)] to-[var(--pink)]" 
                           : "bg-white/20"
                     }`}
-                    style={{ width: `${paymentCompleted ? 100 : Math.min(simStep * 25, 100)}%` }}
+                    style={{ width: `${paymentCompleted ? 100 : progress}%` }}
                   />
                 </div>
               </div>

@@ -31,6 +31,7 @@ function Index() {
   const [isMinting, setIsMinting] = useState(false);
   const [mintSuccess, setMintSuccess] = useState(false);
   const [txHash, setTxHash] = useState("");
+  const [progress, setProgress] = useState(0);
 
   const handleMint = async (badgeType: number = 0) => {
     if (!wallet.account) {
@@ -43,6 +44,7 @@ function Index() {
     }
 
     setIsMinting(true);
+    setProgress(0);
     
     // Optimistic UI - show success immediately
     setMintSuccess(true);
@@ -50,11 +52,34 @@ function Index() {
     try {
       const provider = (window as any).ethereum;
       const signer = await new ethers.BrowserProvider(provider).getSigner();
+      
+      // Simulate realistic progress like payment apps
+      setProgress(10);
+      await new Promise(r => setTimeout(r, 300));
+      
+      setProgress(25);
+      await new Promise(r => setTimeout(r, 400));
+      
+      setProgress(40);
+      await new Promise(r => setTimeout(r, 300));
+      
+      setProgress(55);
+      await new Promise(r => setTimeout(r, 400));
+      
+      setProgress(70);
+      await new Promise(r => setTimeout(r, 300));
+      
+      setProgress(85);
+      await new Promise(r => setTimeout(r, 400));
+      
+      setProgress(95);
       const hash = await executeGaslessClaim(signer, badgeType);
+      setProgress(100);
       setTxHash(hash);
       collection.refresh(wallet.account);
     } catch (error) {
       setMintSuccess(false);
+      setProgress(0);
       console.error("Mint failed:", error);
     } finally {
       setIsMinting(false);
@@ -84,6 +109,7 @@ function Index() {
           paymentCompleted={mintSuccess}
           simStep={mintSuccess ? 5 : 0}
           simActive={isMinting}
+          progress={progress}
         />
       </main>
       <Footer />
