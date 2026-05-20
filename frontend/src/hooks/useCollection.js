@@ -2,25 +2,6 @@ import { useState, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { getCollectionStats, getClaimedBadges } from '../services/ugfService';
 
-// Cache provider to avoid recreation
-let cachedProvider = null;
-
-function getProvider() {
-  if (!cachedProvider) {
-    try {
-      if (typeof window !== 'undefined' && window.ethereum) {
-        cachedProvider = new ethers.BrowserProvider(window.ethereum);
-      } else {
-        cachedProvider = new ethers.JsonRpcProvider('https://sepolia.base.org');
-      }
-    } catch (e) {
-      console.error("Failed to create provider:", e);
-      return null;
-    }
-  }
-  return cachedProvider;
-}
-
 /**
  * Manages on-chain collection data — supply stats, TYI balance, claimed badges.
  * Exposes a single `refresh(account?)` function for consistent re-fetching.
@@ -31,8 +12,17 @@ export function useCollection(account) {
   const [claimed,    setClaimed]    = useState([]);
 
   const refresh = useCallback(async (overrideAccount) => {
-    const provider = getProvider();
-    if (!provider) return;
+    let provider;
+    try {
+      if (typeof window !== 'undefined' && window.ethereum) {
+        provider = new ethers.BrowserProvider(window.ethereum);
+      } else {
+        provider = new ethers.JsonRpcProvider('https://sepolia.base.org');
+      }
+    } catch (e) {
+      console.error("Failed to create provider:", e);
+      return;
+    }
 
     const addr = overrideAccount ?? account;
 

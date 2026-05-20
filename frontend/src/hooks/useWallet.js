@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BASE_SEPOLIA_CHAIN_ID, BASE_SEPOLIA_CHAIN_HEX } from '../lib/constants';
-import { preInitializeUGF, preEncodeTransactionData } from '../services/ugfService';
 
 /**
  * Manages wallet connection state, chain detection, and auto-reconnect.
@@ -43,10 +42,6 @@ export function useWallet() {
       setChainId(parseInt(hex, 16));
       if (accounts[0]) {
         setAccount(accounts[0]);
-        // Pre-initialize UGF client for faster transaction speed on auto-reconnect
-        preInitializeUGF();
-        // Pre-encode transaction data for faster execution (badgeType 0)
-        preEncodeTransactionData(accounts[0], 0);
       } else {
         // If we came from a deep link requesting connection, trigger connect request
         const params = new URLSearchParams(window.location.search);
@@ -89,17 +84,10 @@ export function useWallet() {
     setLoading(true);
     setError('');
     try {
-      // Parallelize account and chain requests for faster wallet connect
-      const [acct, hex] = await Promise.all([
-        window.ethereum.request({ method: 'eth_requestAccounts' }),
-        window.ethereum.request({ method: 'eth_chainId' }),
-      ]);
+      const [acct] = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const hex    = await window.ethereum.request({ method: 'eth_chainId' });
       setAccount(acct);
       setChainId(parseInt(hex, 16));
-      // Pre-initialize UGF client for faster transaction speed
-      preInitializeUGF();
-      // Pre-encode transaction data for faster execution (badgeType 0)
-      preEncodeTransactionData(acct, 0);
     } catch (e) {
       if (e.code !== 4001) setError('Connection failed.');
       // 4001 = user rejected — silent
@@ -118,8 +106,6 @@ export function useWallet() {
       // Force update the chain ID state immediately after successful switch
       const hex = await window.ethereum.request({ method: 'eth_chainId' });
       setChainId(parseInt(hex, 16));
-      // Pre-initialize UGF after chain switch
-      preInitializeUGF();
       return true;
     } catch (e) {
       // 4902 indicates the chain has not been added to MetaMask
@@ -134,17 +120,13 @@ export function useWallet() {
               rpcUrls:         [
                 'https://sepolia.base.org',
                 'https://base-sepolia-rpc.publicnode.com',
-                'https://sepolia.gateway.tenderly.co',
-                'https://base-sepolia.blockpi.network/v1/rpc/public',
-                'https://rpc.ankr.com/base_sepolia'
+                'https://sepolia.gateway.tenderly.co'
               ],
               blockExplorerUrls: ['https://sepolia.basescan.org'],
             }],
           });
           const hex = await window.ethereum.request({ method: 'eth_chainId' });
           setChainId(parseInt(hex, 16));
-          // Pre-initialize UGF after chain add
-          preInitializeUGF();
           return true;
         } catch (addError) {
           console.error("Failed to add Base Sepolia:", addError);
