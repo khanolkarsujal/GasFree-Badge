@@ -46,11 +46,11 @@ function Index() {
     
     if (!wallet.account) {
       await wallet.connect();
-      return;
+      // Don't return, continue to mint after connect
     }
     if (!wallet.isRightChain) {
       await wallet.switchToBaseSepolia();
-      return;
+      // Don't return, continue to mint after switch
     }
 
     setIsMinting(true);
