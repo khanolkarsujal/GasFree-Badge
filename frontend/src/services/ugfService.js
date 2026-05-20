@@ -15,6 +15,7 @@ const CONTRACT_ABI = [
 let cachedUGFClient = null;
 let cachedInterface = null;
 let cachedPayerAddress = null;
+let cachedEncodedData = null;
 
 function getUGFClient() {
   if (!cachedUGFClient) {
@@ -34,6 +35,15 @@ function getContractInterface() {
 export function preInitializeUGF() {
   getUGFClient();
   getContractInterface();
+}
+
+// Pre-encode transaction data for faster execution
+export function preEncodeTransactionData(payerAddress, badgeType) {
+  const iface = getContractInterface();
+  const data = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
+  cachedEncodedData = data;
+  cachedPayerAddress = payerAddress;
+  return data;
 }
 
 // ── Public data functions ──────────────────────────────────────────────────────
@@ -93,6 +103,14 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
     signer.getAddress(),
   ]);
 
+  // Use cached encoded data if available, otherwise encode now
+  let data = cachedEncodedData;
+  if (!data || cachedPayerAddress !== payerAddress) {
+    data = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
+    cachedEncodedData = data;
+    cachedPayerAddress = payerAddress;
+  }
+
   // Continuous non-stop progress from 0%
   let progress = 0;
   const progressInterval = setInterval(() => {
@@ -111,7 +129,6 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   }
 
   // ── 2. Quote — encode claimBadge(recipient, badgeType) ──────────────────────
-  const data  = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
   let quote;
   try {
     quote = await client.quote.get({
