@@ -89,10 +89,10 @@ export function Navbar({ wallet, collection, platform, platformAuth, setPlatform
                 ? wallet.switchToBaseSepolia
                 : undefined
             }
-            className={`rounded-full px-5 py-2 text-sm font-medium transition ${
+            className={`rounded-full px-5 py-2 text-sm font-bold transition ${
               wallet.account && !wallet.isRightChain
-                ? "bg-amber-500 hover:bg-amber-400 text-black font-bold shadow-[0_0_30px_rgba(245,158,11,0.4)]"
-                : "bg-gradient-to-r from-[var(--violet)] to-[var(--pink)] text-white shadow-[0_0_30px_oklch(0.7_0.22_295_/_0.5)] hover:opacity-90"
+                ? "bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_30px_rgba(245,158,11,0.4)]"
+                : "bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.6)] hover:bg-white/90 hover:shadow-[0_0_40px_rgba(255,255,255,0.8)] border-2 border-white/20"
             }`}
           >
             {!wallet.account
