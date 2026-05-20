@@ -86,21 +86,18 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
     signer.getAddress(),
   ]);
 
-  // Smart progress: continuous during processing, pauses during network waits
+  // Continuous non-stop progress from 0%
   let progress = 0;
-  let isProcessing = true;
   const progressInterval = setInterval(() => {
-    if (isProcessing && progress < 95) {
+    if (progress < 95) {
       progress += 2;
       onProgress(progress);
     }
-  }, 50);
+  }, 150);
 
   // ── 1. Authenticate ──────────────────────────────────────────────────────────
   try {
-    isProcessing = false; // Pause during network call
     await client.auth.login(signer);
-    isProcessing = true; // Resume after network call
   } catch (err) {
     clearInterval(progressInterval);
     throw new Error(`Authentication failed: ${_msg(err)}`);
@@ -110,7 +107,6 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   const data  = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
   let quote;
   try {
-    isProcessing = false; // Pause during network call
     quote = await client.quote.get({
       payer_address: payerAddress.toLowerCase(),
       tx_object: JSON.stringify({
@@ -120,7 +116,6 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
         value: '0x0',
       }),
     });
-    isProcessing = true; // Resume after network call
   } catch (err) {
     clearInterval(progressInterval);
     throw new Error(`Quote failed: ${_msg(err)}`);
@@ -128,9 +123,7 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
 
   // ── 3. Settle — ERC-3009 TYI signature (user pays zero ETH) ─────────────────
   try {
-    isProcessing = false; // Pause during network call
     await client.payment.x402.execute({ quote, signer });
-    isProcessing = true; // Resume after network call
   } catch (err) {
     clearInterval(progressInterval);
     const msg = _msg(err);
@@ -140,13 +133,11 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
 
   // ── 4. Execute — UGF sponsors ETH, confirms on-chain ────────────────────────
   try {
-    isProcessing = false; // Pause during network call
     const { userTxHash } = await client.chains.evm.sponsorAndExecute(
       quote.digest,
       signer,
       async () => ({ to: CONTRACT_ADDRESS.toLowerCase(), data, value: 0n })
     );
-    isProcessing = true; // Resume after network call
     clearInterval(progressInterval);
     onProgress(100);
     return userTxHash;
