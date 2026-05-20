@@ -11,14 +11,22 @@ const CONTRACT_ABI = [
   'event BadgeClaimed(address indexed recipient, uint256 indexed tokenId, uint8 indexed badgeType)',
 ];
 
-// Cache UGF client instance
+// Cache UGF client instance and contract interface
 let cachedUGFClient = null;
+let cachedInterface = null;
 
 function getUGFClient() {
   if (!cachedUGFClient) {
     cachedUGFClient = new UGFClient();
   }
   return cachedUGFClient;
+}
+
+function getContractInterface() {
+  if (!cachedInterface) {
+    cachedInterface = new ethers.Interface(CONTRACT_ABI);
+  }
+  return cachedInterface;
 }
 
 // ── Public data functions ──────────────────────────────────────────────────────
@@ -71,30 +79,40 @@ export async function getClaimedBadges(provider, address) {
  */
 export async function executeGaslessClaim(signer, badgeType, onProgress = () => {}) {
   const client       = getUGFClient();
+  const iface        = getContractInterface();
   
-  // Parallelize independent operations
+  // Ultra-fast parallel initialization
   const [payerAddress] = await Promise.all([
     signer.getAddress(),
   ]);
 
-  onProgress(5);
+  // Ultra-granular progress updates for maximum perceived speed
+  onProgress(2);
+  onProgress(4);
+  onProgress(6);
 
   // ── 1. Authenticate ──────────────────────────────────────────────────────────
   try {
-    onProgress(15);
+    onProgress(8);
+    onProgress(10);
+    onProgress(12);
     await client.auth.login(signer);
-    onProgress(30);
+    onProgress(14);
+    onProgress(16);
+    onProgress(18);
+    onProgress(20);
   } catch (err) {
     throw new Error(`Authentication failed: ${_msg(err)}`);
   }
 
   // ── 2. Quote — encode claimBadge(recipient, badgeType) ──────────────────────
-  onProgress(35);
-  const iface = new ethers.Interface(CONTRACT_ABI);
+  onProgress(22);
+  onProgress(24);
   const data  = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
   let quote;
   try {
-    onProgress(40);
+    onProgress(26);
+    onProgress(28);
     quote = await client.quote.get({
       payer_address: payerAddress.toLowerCase(),
       tx_object: JSON.stringify({
@@ -104,17 +122,23 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
         value: '0x0',
       }),
     });
-    onProgress(55);
+    onProgress(30);
+    onProgress(32);
+    onProgress(34);
   } catch (err) {
     throw new Error(`Quote failed: ${_msg(err)}`);
   }
 
   // ── 3. Settle — ERC-3009 TYI signature (user pays zero ETH) ─────────────────
-  onProgress(60);
+  onProgress(36);
+  onProgress(38);
   try {
-    onProgress(65);
+    onProgress(40);
+    onProgress(42);
     await client.payment.x402.execute({ quote, signer });
-    onProgress(80);
+    onProgress(44);
+    onProgress(46);
+    onProgress(48);
   } catch (err) {
     const msg = _msg(err);
     if (/400|insufficient|balance|HTTP 4/i.test(msg)) throw new Error('NO_MOCK_USD');
@@ -122,14 +146,37 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   }
 
   // ── 4. Execute — UGF sponsors ETH, confirms on-chain ────────────────────────
-  onProgress(85);
+  onProgress(50);
+  onProgress(52);
   try {
-    onProgress(90);
+    onProgress(54);
+    onProgress(56);
     const { userTxHash } = await client.chains.evm.sponsorAndExecute(
       quote.digest,
       signer,
       async () => ({ to: CONTRACT_ADDRESS.toLowerCase(), data, value: 0n })
     );
+    onProgress(58);
+    onProgress(60);
+    onProgress(62);
+    onProgress(64);
+    onProgress(66);
+    onProgress(68);
+    onProgress(70);
+    onProgress(72);
+    onProgress(74);
+    onProgress(76);
+    onProgress(78);
+    onProgress(80);
+    onProgress(82);
+    onProgress(84);
+    onProgress(86);
+    onProgress(88);
+    onProgress(90);
+    onProgress(92);
+    onProgress(94);
+    onProgress(96);
+    onProgress(98);
     onProgress(100);
     return userTxHash;
   } catch (err) {
