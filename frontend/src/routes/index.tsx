@@ -32,7 +32,6 @@ function Index() {
   const [mintSuccess, setMintSuccess] = useState(false);
   const [txHash, setTxHash] = useState("");
   const [progress, setProgress] = useState(0);
-  const [cachedSigner, setCachedSigner] = useState<any>(null);
 
   // Pre-initialize UGF and encode data at app startup for maximum speed
   useEffect(() => {
@@ -61,13 +60,8 @@ function Index() {
     setMintSuccess(true);
     
     try {
-      // Reuse cached signer or create new one
-      let signer = cachedSigner;
-      if (!signer) {
-        const provider = (window as any).ethereum;
-        signer = await new ethers.BrowserProvider(provider).getSigner();
-        setCachedSigner(signer);
-      }
+      const provider = (window as any).ethereum;
+      const signer = await new ethers.BrowserProvider(provider).getSigner();
       const signerTime = performance.now();
       console.log(`[Timing] Signer creation: ${(signerTime - startTime).toFixed(2)}ms`);
       
@@ -84,8 +78,6 @@ function Index() {
       setMintSuccess(false);
       setProgress(0);
       console.error("Mint failed:", error);
-      // Clear cached signer on error to force re-creation
-      setCachedSigner(null);
     } finally {
       setIsMinting(false);
     }
