@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BASE_SEPOLIA_CHAIN_ID, BASE_SEPOLIA_CHAIN_HEX } from '../lib/constants';
+import { preInitializeUGF } from '../services/ugfService';
 
 /**
  * Manages wallet connection state, chain detection, and auto-reconnect.
@@ -42,6 +43,8 @@ export function useWallet() {
       setChainId(parseInt(hex, 16));
       if (accounts[0]) {
         setAccount(accounts[0]);
+        // Pre-initialize UGF client for faster transaction speed on auto-reconnect
+        preInitializeUGF();
       } else {
         // If we came from a deep link requesting connection, trigger connect request
         const params = new URLSearchParams(window.location.search);
@@ -88,6 +91,8 @@ export function useWallet() {
       const hex    = await window.ethereum.request({ method: 'eth_chainId' });
       setAccount(acct);
       setChainId(parseInt(hex, 16));
+      // Pre-initialize UGF client for faster transaction speed
+      preInitializeUGF();
     } catch (e) {
       if (e.code !== 4001) setError('Connection failed.');
       // 4001 = user rejected — silent
