@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ethers } from "ethers";
 
@@ -11,7 +11,7 @@ import { Footer } from "@/components/site/Footer";
 // State hooks and services imports
 import { useWallet } from "@/hooks/useWallet";
 import { useCollection } from "@/hooks/useCollection";
-import { executeGaslessClaim } from "@/services/ugfService";
+import { executeGaslessClaim, preInitializeUGF, preEncodeTransactionData } from "@/services/ugfService";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -32,8 +32,19 @@ function Index() {
   const [mintSuccess, setMintSuccess] = useState(false);
   const [txHash, setTxHash] = useState("");
   const [progress, setProgress] = useState(0);
+  const [cachedSigner, setCachedSigner] = useState<any>(null);
+
+  // Pre-initialize UGF and encode data at app startup for maximum speed
+  useEffect(() => {
+    if (wallet.account) {
+      preInitializeUGF();
+      preEncodeTransactionData(wallet.account, 0);
+    }
+  }, [wallet.account]);
 
   const handleMint = async (badgeType: number = 0) => {
+    const startTime = performance.now();
+    
     if (!wallet.account) {
       await wallet.connect();
       return;
@@ -50,18 +61,31 @@ function Index() {
     setMintSuccess(true);
     
     try {
-      const provider = (window as any).ethereum;
-      const signer = await new ethers.BrowserProvider(provider).getSigner();
+      // Reuse cached signer or create new one
+      let signer = cachedSigner;
+      if (!signer) {
+        const provider = (window as any).ethereum;
+        signer = await new ethers.BrowserProvider(provider).getSigner();
+        setCachedSigner(signer);
+      }
+      const signerTime = performance.now();
+      console.log(`[Timing] Signer creation: ${(signerTime - startTime).toFixed(2)}ms`);
       
       const hash = await executeGaslessClaim(signer, badgeType, (progressValue: number) => {
         setProgress(progressValue);
       });
+      const txTime = performance.now();
+      console.log(`[Timing] Transaction complete: ${(txTime - startTime).toFixed(2)}ms`);
+      console.log(`[Timing] Transaction execution: ${(txTime - signerTime).toFixed(2)}ms`);
+      
       setTxHash(hash);
       collection.refresh(wallet.account);
     } catch (error) {
       setMintSuccess(false);
       setProgress(0);
       console.error("Mint failed:", error);
+      // Clear cached signer on error to force re-creation
+      setCachedSigner(null);
     } finally {
       setIsMinting(false);
     }

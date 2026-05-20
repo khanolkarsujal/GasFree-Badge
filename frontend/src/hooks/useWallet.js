@@ -118,6 +118,8 @@ export function useWallet() {
       // Force update the chain ID state immediately after successful switch
       const hex = await window.ethereum.request({ method: 'eth_chainId' });
       setChainId(parseInt(hex, 16));
+      // Pre-initialize UGF after chain switch
+      preInitializeUGF();
       return true;
     } catch (e) {
       // 4902 indicates the chain has not been added to MetaMask
@@ -132,13 +134,17 @@ export function useWallet() {
               rpcUrls:         [
                 'https://sepolia.base.org',
                 'https://base-sepolia-rpc.publicnode.com',
-                'https://sepolia.gateway.tenderly.co'
+                'https://sepolia.gateway.tenderly.co',
+                'https://base-sepolia.blockpi.network/v1/rpc/public',
+                'https://rpc.ankr.com/base_sepolia'
               ],
               blockExplorerUrls: ['https://sepolia.basescan.org'],
             }],
           });
           const hex = await window.ethereum.request({ method: 'eth_chainId' });
           setChainId(parseInt(hex, 16));
+          // Pre-initialize UGF after chain add
+          preInitializeUGF();
           return true;
         } catch (addError) {
           console.error("Failed to add Base Sepolia:", addError);
