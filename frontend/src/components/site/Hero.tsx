@@ -102,10 +102,10 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
 
         {/* Loading Modal */}
         {isMinting && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="relative bg-black/60 backdrop-blur-xl border border-white/20 rounded-3xl p-8 max-w-md w-full shadow-[0_0_80px_rgba(139,92,246,0.5)] animate-in zoom-in duration-300">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="relative bg-card border border-border rounded-3xl p-8 max-w-md w-full shadow-[0_0_60px_rgba(139,92,246,0.3)] animate-in zoom-in duration-300">
               <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-emerald-500 flex items-center justify-center mb-6 animate-pulse">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--pink)] flex items-center justify-center mb-6 animate-pulse">
                   <Zap className="w-8 h-8 text-white" />
                 </div>
                 
@@ -122,9 +122,9 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
                     <span>Transaction Progress</span>
                     <span>{Math.round(progress || 0)}%</span>
                   </div>
-                  <div className="h-8 rounded-full bg-white/10 overflow-hidden border-2 border-white/30 relative">
+                  <div className="h-3 rounded-full bg-white/10 overflow-hidden border border-border/50 relative">
                     <div 
-                      className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-emerald-500 shadow-[0_0_30px_rgba(139,92,246,0.8)] animate-pulse"
+                      className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-[var(--violet)] to-[var(--pink)] shadow-[0_0_15px_rgba(139,92,246,0.5)]"
                       style={{ width: `${Math.max(progress || 0, 5)}%` }}
                     />
                   </div>
@@ -143,37 +143,34 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
 
         {/* Success Modal */}
         {mintSuccess && txHash && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="relative bg-black/60 backdrop-blur-xl border border-white/20 rounded-3xl p-8 max-w-md w-full shadow-[0_0_80px_rgba(16,185,129,0.4)] animate-in zoom-in duration-300">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="relative bg-card border border-border rounded-3xl p-8 max-w-md w-full shadow-[0_0_60px_rgba(16,185,129,0.3)] animate-in zoom-in duration-300">
               <button
                 onClick={() => window.location.reload()}
-                className="absolute top-4 right-4 text-muted-foreground hover:text-white transition"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition"
               >
                 <X className="w-5 h-5" />
               </button>
               
               <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(16,185,129,0.5)] animate-in scale-in duration-500">
-                  <CheckCircle className="w-10 h-10 text-white" />
+                <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mb-6">
+                  <CheckCircle className="w-8 h-8 text-emerald-500" />
                 </div>
                 
-                <h3 className="font-display font-bold text-3xl text-white mb-2">
+                <h3 className="font-display font-bold text-2xl text-white mb-2">
                   Badge Minted Successfully!
                 </h3>
                 
-                <p className="text-sm text-muted-foreground mb-8">
+                <p className="text-sm text-muted-foreground mb-6">
                   Your GasFree Badge has been minted on Base Sepolia.
                 </p>
                 
                 <div className="w-full space-y-4">
-                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <div className="text-[10px] text-emerald-400 uppercase font-bold tracking-wider">
-                        Transaction Hash
-                      </div>
+                  <div className="rounded-xl border border-border bg-secondary/40 p-4">
+                    <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">
+                      Transaction Hash
                     </div>
-                    <div className="font-mono text-xs text-white break-all bg-black/30 rounded-lg p-3 border border-white/10">
+                    <div className="font-mono text-xs text-[var(--violet)] break-all">
                       {txHash}
                     </div>
                   </div>
@@ -182,7 +179,7 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
                     href={`https://sepolia.basescan.org/tx/${txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3.5 text-sm font-bold hover:from-emerald-600 hover:to-green-600 transition shadow-[0_0_30px_rgba(16,185,129,0.4)]"
+                    className="flex items-center justify-center gap-2 w-full rounded-full bg-white text-black px-4 py-3 text-sm font-bold hover:bg-white/90 transition"
                   >
                     <ExternalLink className="w-4 h-4" />
                     View on Base Sepolia Explorer
@@ -190,7 +187,7 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
                   
                   <button
                     onClick={() => window.location.reload()}
-                    className="w-full rounded-full border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-medium hover:bg-white/20 transition text-white"
+                    className="w-full rounded-full border border-border bg-card/30 px-4 py-3 text-sm font-medium hover:bg-card transition"
                   >
                     Close
                   </button>
