@@ -86,33 +86,27 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
     signer.getAddress(),
   ]);
 
-  // Ultra-granular progress updates for maximum perceived speed
-  onProgress(2);
-  onProgress(4);
-  onProgress(6);
+  // Continuous non-stop progress from 0%
+  let progress = 0;
+  const progressInterval = setInterval(() => {
+    if (progress < 95) {
+      progress += 2;
+      onProgress(progress);
+    }
+  }, 50);
 
   // ── 1. Authenticate ──────────────────────────────────────────────────────────
   try {
-    onProgress(8);
-    onProgress(10);
-    onProgress(12);
     await client.auth.login(signer);
-    onProgress(14);
-    onProgress(16);
-    onProgress(18);
-    onProgress(20);
   } catch (err) {
+    clearInterval(progressInterval);
     throw new Error(`Authentication failed: ${_msg(err)}`);
   }
 
   // ── 2. Quote — encode claimBadge(recipient, badgeType) ──────────────────────
-  onProgress(22);
-  onProgress(24);
   const data  = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
   let quote;
   try {
-    onProgress(26);
-    onProgress(28);
     quote = await client.quote.get({
       payer_address: payerAddress.toLowerCase(),
       tx_object: JSON.stringify({
@@ -122,64 +116,33 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
         value: '0x0',
       }),
     });
-    onProgress(30);
-    onProgress(32);
-    onProgress(34);
   } catch (err) {
+    clearInterval(progressInterval);
     throw new Error(`Quote failed: ${_msg(err)}`);
   }
 
   // ── 3. Settle — ERC-3009 TYI signature (user pays zero ETH) ─────────────────
-  onProgress(36);
-  onProgress(38);
   try {
-    onProgress(40);
-    onProgress(42);
     await client.payment.x402.execute({ quote, signer });
-    onProgress(44);
-    onProgress(46);
-    onProgress(48);
   } catch (err) {
+    clearInterval(progressInterval);
     const msg = _msg(err);
     if (/400|insufficient|balance|HTTP 4/i.test(msg)) throw new Error('NO_MOCK_USD');
     throw new Error(`Payment failed: ${msg}`);
   }
 
   // ── 4. Execute — UGF sponsors ETH, confirms on-chain ────────────────────────
-  onProgress(50);
-  onProgress(52);
   try {
-    onProgress(54);
-    onProgress(56);
     const { userTxHash } = await client.chains.evm.sponsorAndExecute(
       quote.digest,
       signer,
       async () => ({ to: CONTRACT_ADDRESS.toLowerCase(), data, value: 0n })
     );
-    onProgress(58);
-    onProgress(60);
-    onProgress(62);
-    onProgress(64);
-    onProgress(66);
-    onProgress(68);
-    onProgress(70);
-    onProgress(72);
-    onProgress(74);
-    onProgress(76);
-    onProgress(78);
-    onProgress(80);
-    onProgress(82);
-    onProgress(84);
-    onProgress(86);
-    onProgress(88);
-    onProgress(90);
-    onProgress(92);
-    onProgress(94);
-    onProgress(96);
-    onProgress(98);
+    clearInterval(progressInterval);
     onProgress(100);
     return userTxHash;
   } catch (err) {
+    clearInterval(progressInterval);
     const msg = _msg(err);
     if (msg.includes('MaxSupplyReached')) throw new Error('MAX_SUPPLY');
     if (msg.includes('ContractPaused'))   throw new Error('PAUSED');
