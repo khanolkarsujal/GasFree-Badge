@@ -1,17 +1,12 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ethers } from "ethers";
-
-// Component imports
-import { Navbar } from "@/components/site/Navbar";
+import { Layout } from "@/components/Layout";
 import { Hero } from "@/components/site/Hero";
 import { Dashboard } from "@/components/site/Dashboard";
-import { Footer } from "@/components/site/Footer";
-
-// State hooks and services imports
 import { useWallet } from "@/hooks/useWallet";
 import { useCollection } from "@/hooks/useCollection";
-import { executeGaslessClaim } from "@/services/ugfService";
+import { useUGFTransaction } from "@/hooks/useUGFTransaction";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,76 +21,57 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const navigate = useNavigate({ from: "/" });
   const wallet = useWallet();
   const collection = useCollection(wallet.account);
-  const [isMinting, setIsMinting] = useState(false);
-  const [mintSuccess, setMintSuccess] = useState(false);
-  const [txHash, setTxHash] = useState("");
-  const [progress, setProgress] = useState(0);
+  const { startTransaction, state, progress, txHash } = useUGFTransaction();
 
   const handleMint = async (badgeType: number = 0) => {
-    if (!wallet.account) {
-      await wallet.connect();
-      return;
-    }
-    if (!wallet.isRightChain) {
-      await wallet.switchToBaseSepolia();
+    if (!wallet.account || !wallet.isRightChain) {
+      toast.error("Please connect your wallet and switch to Base Sepolia before minting.", {
+        style: { background: "rgba(0,0,0,0.8)", color: "white", border: "1px solid rgba(255,255,255,0.1)" }
+      });
+      if (!wallet.account) {
+        await wallet.connect();
+      } else {
+        await wallet.switchToBaseSepolia();
+      }
       return;
     }
 
-    setIsMinting(true);
-    setProgress(0);
-    
-    // Optimistic UI - show success immediately
-    setMintSuccess(true);
-    
     try {
       const provider = (window as any).ethereum;
       const signer = await new ethers.BrowserProvider(provider).getSigner();
       
-      const hash = await executeGaslessClaim(signer, badgeType, (progressValue: number) => {
-        setProgress(progressValue);
-      });
-      setTxHash(hash);
-      collection.refresh(wallet.account);
-    } catch (error) {
-      setMintSuccess(false);
-      setProgress(0);
-      console.error("Mint failed:", error);
-    } finally {
-      setIsMinting(false);
+      // Start the actual UGF SDK transaction in the background
+      startTransaction(signer, badgeType);
+      
+      // Immediately navigate to loading screen
+      navigate({ to: '/loading' });
+    } catch (err) {
+      console.error("Failed to start transaction:", err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative selection:bg-indigo-500/30 selection:text-indigo-100 overflow-x-hidden">
-      <Navbar
+    <Layout wallet={wallet} collection={collection}>
+      <Hero
         wallet={wallet}
         collection={collection}
-        platform={null}
-        platformAuth={null}
-        setPlatformTick={() => {}}
+        onMint={handleMint}
+        isMinting={state !== "idle" && state !== "success" && state !== "error"}
+        mintSuccess={state === "success"}
+        progress={progress}
+        txHash={txHash || ""}
       />
-      <main>
-        <Hero
-          wallet={wallet}
-          collection={collection}
-          onMint={handleMint}
-          isMinting={isMinting}
-          mintSuccess={mintSuccess}
-          progress={progress}
-          txHash={txHash}
-        />
-        <Dashboard
-          wallet={wallet}
-          collection={collection}
-          paymentCompleted={mintSuccess}
-          simStep={mintSuccess ? 5 : 0}
-          simActive={isMinting}
-          progress={progress}
-        />
-      </main>
-      <Footer />
-    </div>
+      <Dashboard
+        wallet={wallet}
+        collection={collection}
+        paymentCompleted={false}
+        simStep={0}
+        simActive={false}
+        progress={0}
+      />
+    </Layout>
   );
 }

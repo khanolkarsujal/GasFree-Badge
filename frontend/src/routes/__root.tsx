@@ -8,6 +8,9 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { UGFProvider } from "@tychilabs/react-ugf";
+import { TransactionProvider } from "@/hooks/useUGFTransaction";
+import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -120,7 +123,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <UGFProvider mode="testnet">
+        <TransactionProvider>
+          <Outlet />
+          <Toaster theme="dark" position="top-center" />
+        </TransactionProvider>
+      </UGFProvider>
     </QueryClientProvider>
   );
 }

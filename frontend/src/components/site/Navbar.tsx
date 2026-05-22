@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Link2, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { ethers } from "ethers";
+import logo from "@/assets/gaslessio-logo.png";
 
 interface NavbarProps {
   wallet: any;
@@ -32,11 +33,14 @@ export function Navbar({ wallet, collection, platform, platformAuth, setPlatform
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-border/40 backdrop-blur-xl bg-background/60">
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="relative grid place-items-center w-8 h-8 rounded-full border border-border bg-card">
-            <Link2 className="w-3.5 h-3.5 text-foreground" />
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--mint)] shadow-[0_0_8px_var(--mint)]" />
-          </span>
+        <Link to="/" className="flex items-center gap-3">
+          <div className="bg-white/10 backdrop-blur-md p-1.5 rounded-lg shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+            <img 
+              src={logo} 
+              alt="Gaslessio Logo" 
+              className="h-10 w-auto brightness-125 contrast-125 drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]" 
+            />
+          </div>
           <span className="font-display font-semibold tracking-[0.3em] text-sm">GASLESSIO</span>
         </Link>
 

@@ -77,7 +77,7 @@ export async function getClaimedBadges(provider, address) {
  * @param {Function}      onProgress Progress callback: receives percentage (0-100)
  * @returns {Promise<string>}       Confirmed on-chain tx hash
  */
-export async function executeGaslessClaim(signer, badgeType, onProgress = () => {}) {
+export async function executeGaslessClaim(signer, badgeType, onProgress = () => {}, onStage = () => {}) {
   const client       = getUGFClient();
   const iface        = getContractInterface();
   
@@ -97,6 +97,7 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
 
   // ── 1. Authenticate ──────────────────────────────────────────────────────────
   try {
+    onStage("auth");
     await client.auth.login(signer);
   } catch (err) {
     clearInterval(progressInterval);
@@ -107,6 +108,7 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   const data  = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
   let quote;
   try {
+    onStage("quote");
     quote = await client.quote.get({
       payer_address: payerAddress.toLowerCase(),
       tx_object: JSON.stringify({
@@ -123,6 +125,7 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
 
   // ── 3. Settle — ERC-3009 TYI signature (user pays zero ETH) ─────────────────
   try {
+    onStage("settle");
     await client.payment.x402.execute({ quote, signer });
   } catch (err) {
     clearInterval(progressInterval);
@@ -133,6 +136,7 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
 
   // ── 4. Execute — UGF sponsors ETH, confirms on-chain ────────────────────────
   try {
+    onStage("execute");
     const { userTxHash } = await client.chains.evm.sponsorAndExecute(
       quote.digest,
       signer,
@@ -140,6 +144,7 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
     );
     clearInterval(progressInterval);
     onProgress(100);
+    onStage("success");
     return userTxHash;
   } catch (err) {
     clearInterval(progressInterval);
