@@ -150,6 +150,79 @@ export async function executeGaslessClaim(signer, badgeType, onProgress = () => 
   }
 }
 
+/**
+ * Execute a gasless NFT badge claim via UGF with step-based progress.
+ * Matches frontend_old implementation exactly.
+ *
+ * UGF Flow (No paymasters. No bundlers. No ERC-4337.):
+ *  1. Auth    — EIP-191 wallet sign → JWT
+ *  2. Quote   — tx calldata → digest + TYI settlement amount
+ *  3. Settle  — ERC-3009 TYI_MOCK_USD signature (no ETH from user)
+ *  4. Execute — UGF sponsors gas, claimBadge(recipient, badgeType) lands on-chain
+ *
+ * @param {ethers.Signer} signer    Connected signer (Base Sepolia required)
+ * @param {number}        badgeType The badge type ID (0 = Explorer, 1 = Builder, 2 = Pioneer)
+ * @param {Function}      onStep    Progress callback: receives step number (1-4)
+ * @returns {Promise<string>}       Confirmed on-chain tx hash
+ */
+export async function executeGaslessClaimWithSteps(signer, badgeType, onStep = () => {}) {
+  const client       = getUGFClient();
+  const iface        = getContractInterface();
+  const payerAddress = await signer.getAddress();
+
+  // ── 1. Authenticate ──────────────────────────────────────────────────────────
+  onStep(1);
+  try {
+    await client.auth.login(signer);
+  } catch (err) {
+    throw new Error(`Authentication failed: ${_msg(err)}`);
+  }
+
+  // ── 2. Quote — encode claimBadge(recipient, badgeType) ──────────────────────
+  onStep(2);
+  const data  = iface.encodeFunctionData('claimBadge', [payerAddress, badgeType]);
+  let quote;
+  try {
+    quote = await client.quote.get({
+      payer_address: payerAddress.toLowerCase(),
+      tx_object: JSON.stringify({
+        from:  payerAddress.toLowerCase(),
+        to:    CONTRACT_ADDRESS.toLowerCase(),
+        data,
+        value: '0x0',
+      }),
+    });
+  } catch (err) {
+    throw new Error(`Quote failed: ${_msg(err)}`);
+  }
+
+  // ── 3. Settle — ERC-3009 TYI signature (user pays zero ETH) ─────────────────
+  onStep(3);
+  try {
+    await client.payment.x402.execute({ quote, signer });
+  } catch (err) {
+    const msg = _msg(err);
+    if (/400|insufficient|balance|HTTP 4/i.test(msg)) throw new Error('NO_MOCK_USD');
+    throw new Error(`Payment failed: ${msg}`);
+  }
+
+  // ── 4. Execute — UGF sponsors ETH, confirms on-chain ────────────────────────
+  onStep(4);
+  try {
+    const { userTxHash } = await client.chains.evm.sponsorAndExecute(
+      quote.digest,
+      signer,
+      async () => ({ to: CONTRACT_ADDRESS.toLowerCase(), data, value: 0n })
+    );
+    return userTxHash;
+  } catch (err) {
+    const msg = _msg(err);
+    if (msg.includes('MaxSupplyReached')) throw new Error('MAX_SUPPLY');
+    if (msg.includes('ContractPaused'))   throw new Error('PAUSED');
+    throw new Error(`Execution failed: ${msg}`);
+  }
+}
+
 function _msg(err) {
   return err instanceof UGFError ? err.message : (err?.message ?? String(err));
 }

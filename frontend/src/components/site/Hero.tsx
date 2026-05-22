@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { Wallet, Zap, ArrowRight, Github, CheckCircle, ExternalLink, X } from "lucide-react";
+import { Wallet, Zap, ArrowRight, Github } from "lucide-react";
 import { ethers } from "ethers";
 import { shortenAddress } from "@/lib/utils";
+import { ClaimModal } from "@/components/badge/ClaimModal";
+import { BADGES } from "@/lib/constants";
 
 interface HeroProps {
   wallet: any;
@@ -9,11 +11,14 @@ interface HeroProps {
   onMint?: (badgeType?: number) => Promise<void>;
   isMinting?: boolean;
   mintSuccess?: boolean;
-  progress?: number;
+  activeStep?: number;
   txHash?: string;
+  error?: string;
+  claimModalOpen?: boolean;
+  onCloseClaimModal?: () => void;
 }
 
-export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progress, txHash }: HeroProps) {
+export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, activeStep, txHash, error, claimModalOpen, onCloseClaimModal }: HeroProps) {
   const [ethBalance, setEthBalance] = useState<string>("0.00");
 
   useEffect(() => {
@@ -100,102 +105,15 @@ export function Hero({ wallet, collection, onMint, isMinting, mintSuccess, progr
           </div>
         </div>
 
-        {/* Loading Modal */}
-        {isMinting && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="relative bg-card border border-border rounded-3xl p-8 max-w-md w-full shadow-[0_0_60px_rgba(139,92,246,0.3)] animate-in zoom-in duration-300">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[var(--violet)] to-[var(--pink)] flex items-center justify-center mb-6 animate-pulse">
-                  <Zap className="w-8 h-8 text-white" />
-                </div>
-                
-                <h3 className="font-display font-bold text-2xl text-white mb-2">
-                  Processing Transaction
-                </h3>
-                
-                <p className="text-sm text-muted-foreground mb-6">
-                  Please wait while we process your transaction on Base Sepolia.
-                </p>
-                
-                <div className="w-full">
-                  <div className="flex justify-between text-sm font-semibold text-white mb-3">
-                    <span>Transaction Progress</span>
-                    <span>{Math.round(progress || 0)}%</span>
-                  </div>
-                  <div className="h-3 rounded-full bg-white/10 overflow-hidden border border-border/50 relative">
-                    <div 
-                      className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-[var(--violet)] to-[var(--pink)] shadow-[0_0_15px_rgba(139,92,246,0.5)]"
-                      style={{ width: `${Math.max(progress || 0, 5)}%` }}
-                    />
-                  </div>
-                  <div className="mt-3 text-xs text-muted-foreground text-center">
-                    {(progress || 0) < 25 && "Authenticating wallet..."}
-                    {(progress || 0) >= 25 && (progress || 0) < 50 && "Getting transaction quote..."}
-                    {(progress || 0) >= 50 && (progress || 0) < 75 && "Settling payment..."}
-                    {(progress || 0) >= 75 && (progress || 0) < 100 && "Executing transaction..."}
-                    {(progress || 0) === 100 && "Transaction complete!"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Success Modal */}
-        {mintSuccess && txHash && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="relative bg-card border border-border rounded-3xl p-8 max-w-md w-full shadow-[0_0_60px_rgba(16,185,129,0.3)] animate-in zoom-in duration-300">
-              <button
-                onClick={() => window.location.reload()}
-                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mb-6">
-                  <CheckCircle className="w-8 h-8 text-emerald-500" />
-                </div>
-                
-                <h3 className="font-display font-bold text-2xl text-white mb-2">
-                  Badge Minted Successfully!
-                </h3>
-                
-                <p className="text-sm text-muted-foreground mb-6">
-                  Your GasFree Badge has been minted on Base Sepolia.
-                </p>
-                
-                <div className="w-full space-y-4">
-                  <div className="rounded-xl border border-border bg-secondary/40 p-4">
-                    <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">
-                      Transaction Hash
-                    </div>
-                    <div className="font-mono text-xs text-[var(--violet)] break-all">
-                      {txHash}
-                    </div>
-                  </div>
-                  
-                  <a
-                    href={`https://sepolia.basescan.org/tx/${txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full rounded-full bg-white text-black px-4 py-3 text-sm font-bold hover:bg-white/90 transition"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    View on Base Sepolia Explorer
-                  </a>
-                  
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="w-full rounded-full border border-border bg-card/30 px-4 py-3 text-sm font-medium hover:bg-card transition"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Claim Modal */}
+        <ClaimModal
+          badge={BADGES[0]}
+          activeStep={activeStep || 0}
+          txHash={txHash}
+          error={error}
+          isOpen={claimModalOpen || false}
+          onClose={onCloseClaimModal || (() => {})}
+        />
 
         {/* Right Column (Wallet Card Dashboard) */}
         <div className="relative">
